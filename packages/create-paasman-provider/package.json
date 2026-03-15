@@ -1,0 +1,25 @@
+{
+  "name": "create-paasman-provider",
+  "version": "0.1.0",
+  "description": "Scaffold a new Paasman provider project",
+  "type": "module",
+  "bin": {
+    "create-paasman-provider": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^7.10.1"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.0"
+  },
+  "license": "MIT"
+}
