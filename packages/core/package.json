@@ -24,7 +24,7 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
-    "vitest": "^2.0.0"
+    "vitest": "^4.1.0"
   },
   "license": "MIT"
 }
