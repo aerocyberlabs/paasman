@@ -10,6 +10,7 @@ import { deploysCommand } from './commands/deploys.js'
 import { dbCommand } from './commands/db.js'
 import { profileCommand } from './commands/profile.js'
 import { initCommand } from './commands/init.js'
+import { statusCommand } from './commands/status.js'
 import { handleError } from './error-handler.js'
 
 const program = new Command()
@@ -58,5 +59,6 @@ program.addCommand(deploysCommand(getPaasman))
 program.addCommand(dbCommand(getPaasman))
 program.addCommand(profileCommand())
 program.addCommand(initCommand())
+program.addCommand(statusCommand())
 
 program.parseAsync(process.argv).catch(handleError)

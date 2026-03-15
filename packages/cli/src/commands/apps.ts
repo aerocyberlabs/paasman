@@ -1,7 +1,11 @@
 import { Command } from 'commander'
-import type { Paasman, CreateAppInput } from '@paasman/core'
+import { join } from 'node:path'
+import { homedir } from 'node:os'
+import type { Paasman, CreateAppInput, App } from '@paasman/core'
 import { UnsupportedError } from '@paasman/core'
-import { formatAppsTable, formatJson } from '../formatters.js'
+import { formatAppsTable, formatAllProfilesAppsTable, formatJson, type AllProfilesAppRow } from '../formatters.js'
+import { loadConfig } from '../config.js'
+import { createProvider } from './status.js'
 
 export function appsCommand(getPaasman: () => Promise<Paasman>): Command {
 	const cmd = new Command('apps').description('Manage applications')
@@ -10,10 +14,57 @@ export function appsCommand(getPaasman: () => Promise<Paasman>): Command {
 		.command('list')
 		.description('List all applications')
 		.option('--json', 'Output as JSON')
+		.option('--all-profiles', 'List apps from all profiles')
 		.action(async (opts) => {
-			const pm = await getPaasman()
-			const apps = await pm.apps.list()
-			console.log(opts.json ? formatJson(apps) : formatAppsTable(apps))
+			if (opts.allProfiles) {
+				const configPath = join(homedir(), '.paasman', 'config.yaml')
+				const config = loadConfig(configPath)
+
+				if (opts.json) {
+					const results: Record<string, App[] | { error: string }> = {}
+					for (const [name, profile] of Object.entries(config.profiles)) {
+						const provider = await createProvider(profile)
+						if (!provider) {
+							results[name] = { error: `Could not load provider '${profile.provider}'` }
+							continue
+						}
+						try {
+							results[name] = await provider.apps.list()
+						} catch (err) {
+							results[name] = { error: err instanceof Error ? err.message : String(err) }
+						}
+					}
+					console.log(formatJson(results))
+				} else {
+					const rows: AllProfilesAppRow[] = []
+
+					for (const [name, profile] of Object.entries(config.profiles)) {
+						const provider = await createProvider(profile)
+						if (!provider) {
+							rows.push({ profile: name, error: `Could not load provider '${profile.provider}'` })
+							continue
+						}
+						try {
+							const apps = await provider.apps.list()
+							if (apps.length === 0) {
+								rows.push({ profile: name })
+							} else {
+								for (const app of apps) {
+									rows.push({ profile: name, app })
+								}
+							}
+						} catch (err) {
+							rows.push({ profile: name, error: err instanceof Error ? err.message : String(err) })
+						}
+					}
+
+					console.log(formatAllProfilesAppsTable(rows))
+				}
+			} else {
+				const pm = await getPaasman()
+				const apps = await pm.apps.list()
+				console.log(opts.json ? formatJson(apps) : formatAppsTable(apps))
+			}
 		})
 
 	cmd
