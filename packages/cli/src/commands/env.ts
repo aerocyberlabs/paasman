@@ -1,7 +1,86 @@
 import { Command } from 'commander'
 import { readFileSync, writeFileSync } from 'node:fs'
+import chalk from 'chalk'
 import type { Paasman } from '@paasman/core'
 import { formatEnvTable, formatJson } from '../formatters.js'
+
+export interface EnvDiffResult {
+	localOnly: Record<string, string>
+	remoteOnly: Record<string, string>
+	changed: Record<string, { local: string; remote: string }>
+	matching: Record<string, string>
+}
+
+export function compareEnvVars(
+	localVars: Record<string, string>,
+	remoteVars: Record<string, string>,
+): EnvDiffResult {
+	const localOnly: Record<string, string> = {}
+	const remoteOnly: Record<string, string> = {}
+	const changed: Record<string, { local: string; remote: string }> = {}
+	const matching: Record<string, string> = {}
+
+	for (const [key, value] of Object.entries(localVars)) {
+		if (!(key in remoteVars)) {
+			localOnly[key] = value
+		} else if (remoteVars[key] !== value) {
+			changed[key] = { local: value, remote: remoteVars[key] }
+		} else {
+			matching[key] = value
+		}
+	}
+
+	for (const [key, value] of Object.entries(remoteVars)) {
+		if (!(key in localVars)) {
+			remoteOnly[key] = value
+		}
+	}
+
+	return { localOnly, remoteOnly, changed, matching }
+}
+
+export function parseEnvFile(content: string): Record<string, string> {
+	const vars: Record<string, string> = {}
+	for (const line of content.split('\n')) {
+		const trimmed = line.trim()
+		if (!trimmed || trimmed.startsWith('#')) continue
+		const [key, ...rest] = trimmed.split('=')
+		vars[key] = rest.join('=')
+	}
+	return vars
+}
+
+export function formatEnvDiff(diff: EnvDiffResult, full: boolean): string {
+	const lines: string[] = []
+
+	for (const [key, value] of Object.entries(diff.localOnly)) {
+		lines.push(chalk.green(`  + ${key}=${value}`) + chalk.gray('  (local only — will be added on push)'))
+	}
+
+	for (const [key, value] of Object.entries(diff.remoteOnly)) {
+		lines.push(chalk.red(`  - ${key}=${value}`) + chalk.gray('  (remote only — will be removed on push)'))
+	}
+
+	for (const [key, { local, remote }] of Object.entries(diff.changed)) {
+		lines.push(chalk.yellow(`  ~ ${key}: ${remote} → ${local}`) + chalk.gray('  (value differs)'))
+	}
+
+	const matchCount = Object.keys(diff.matching).length
+	if (full) {
+		for (const [key, value] of Object.entries(diff.matching)) {
+			lines.push(chalk.gray(`    ${key}=${value}`))
+		}
+	} else if (matchCount > 0) {
+		lines.push('')
+		lines.push(chalk.gray(`  ${matchCount} matching key(s) hidden (use --full to show)`))
+	}
+
+	if (lines.length === 0 || (lines.every(l => l === '') && matchCount === 0)) {
+		lines.push(chalk.gray('  No differences found.'))
+	}
+
+	return lines.join('\n')
+}
 
 export function envCommand(getPaasman: () => Promise<Paasman>): Command {
 	const cmd = new Command('env').description('Manage environment variables')
@@ -69,6 +148,31 @@ export function envCommand(getPaasman: () => Promise<Paasman>): Command {
 			}
 			await pm.env.push(appId, vars)
 			console.log(`Pushed ${Object.keys(vars).length} variable(s) from ${opts.file}`)
+		})
+
+	cmd
+		.command('diff <app-id>')
+		.description('Compare local .env file with remote environment variables')
+		.option('-f, --file <file>', 'Local env file to compare', '.env')
+		.option('--full', 'Show matching keys as well')
+		.action(async (appId, opts) => {
+			const pm = await getPaasman()
+			const remoteVars = await pm.env.pull(appId)
+
+			let localContent: string
+			try {
+				localContent = readFileSync(opts.file, 'utf-8')
+			} catch {
+				console.error(chalk.red(`Could not read local file: ${opts.file}`))
+				process.exit(1)
+			}
+
+			const localVars = parseEnvFile(localContent)
+			const diff = compareEnvVars(localVars, remoteVars)
+
+			console.log(`\nComparing local ${opts.file} with remote env for ${appId}\n`)
+			console.log(formatEnvDiff(diff, opts.full ?? false))
+			console.log()
 		})
 
 	return cmd

@@ -94,6 +94,37 @@ export function formatEnvTable(envs: EnvVar[]): string {
 	return table.toString()
 }
 
+export interface AllProfilesAppRow {
+	profile: string
+	app?: App
+	error?: string
+}
+
+export function formatAllProfilesAppsTable(rows: AllProfilesAppRow[]): string {
+	const table = new Table({
+		head: ['Profile', 'ID', 'Name', 'Status', 'Domains'],
+		style: { head: ['cyan'] },
+	})
+
+	for (const row of rows) {
+		if (row.error) {
+			table.push([row.profile, chalk.red('error'), row.error, '', ''])
+		} else if (row.app) {
+			table.push([
+				row.profile,
+				row.app.id.slice(0, 12),
+				row.app.name,
+				row.app.status,
+				row.app.domains.join(', ') || '-',
+			])
+		} else {
+			table.push([row.profile, chalk.gray('-'), chalk.gray('No apps'), '', ''])
+		}
+	}
+
+	return table.toString()
+}
+
 export function formatDatabasesTable(dbs: Database[]): string {
 	const table = new Table({
 		head: ['ID', 'Name', 'Engine', 'Status'],
