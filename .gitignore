@@ -35,5 +35,8 @@ coverage/
 docs/superpowers/
 .claude/
 
+# Worktrees
+.worktrees/
+
 # Debug
 *.debug
