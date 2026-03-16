@@ -1,0 +1,32 @@
+name: 'Paasman Deploy'
+description: 'Deploy applications using Paasman - Universal PaaS CLI'
+branding:
+  icon: 'upload-cloud'
+  color: 'blue'
+inputs:
+  provider:
+    description: 'PaaS provider (coolify, dokploy, caprover, dokku)'
+    required: true
+  server-url:
+    description: 'PaaS server URL'
+    required: true
+  token:
+    description: 'API token for the PaaS provider'
+    required: true
+  app-id:
+    description: 'Application ID to deploy'
+    required: true
+  command:
+    description: 'Command to run (deploy, stop, restart, env-push)'
+    required: false
+    default: 'deploy'
+  env-file:
+    description: 'Path to .env file (for env-push command)'
+    required: false
+  force:
+    description: 'Force rebuild on deploy'
+    required: false
+    default: 'false'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
