@@ -138,7 +138,7 @@ export function envCommand(getPaasman: () => Promise<Paasman>): Command {
 			const content = Object.entries(vars)
 				.map(([k, v]) => `${k}=${v}`)
 				.join('\n')
-			writeFileSync(opts.output, `${content}\n`)
+			writeFileSync(opts.output, `${content}\n`, { mode: 0o600 })
 			console.log(`Written ${Object.keys(vars).length} variable(s) to ${opts.output}`)
 		})
 
