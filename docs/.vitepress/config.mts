@@ -3,6 +3,7 @@ import { defineConfig } from "vitepress";
 export default defineConfig({
 	title: "Paasman",
 	description: "Universal CLI for self-hosted PaaS platforms",
+	base: "/paasman/",
 	themeConfig: {
 		nav: [
 			{ text: "Guide", link: "/guide/getting-started" },
