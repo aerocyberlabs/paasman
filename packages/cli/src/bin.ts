@@ -11,6 +11,7 @@ import { dbCommand } from './commands/db.js'
 import { profileCommand } from './commands/profile.js'
 import { initCommand } from './commands/init.js'
 import { statusCommand } from './commands/status.js'
+import { migrateCommand } from './commands/migrate.js'
 import { handleError } from './error-handler.js'
 
 const program = new Command()
@@ -60,5 +61,6 @@ program.addCommand(dbCommand(getPaasman))
 program.addCommand(profileCommand())
 program.addCommand(initCommand())
 program.addCommand(statusCommand())
+program.addCommand(migrateCommand())
 
 program.parseAsync(process.argv).catch(handleError)
