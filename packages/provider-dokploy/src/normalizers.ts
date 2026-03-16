@@ -93,7 +93,7 @@ export function toEnvVar(line: string): EnvVar {
 }
 
 export function toDatabase(raw: Record<string, unknown>): Database {
-  const status = mapAppStatus(raw.applicationStatus as string)
+  const status = mapAppStatus((raw.databaseStatus ?? raw.applicationStatus ?? raw.status) as string)
   const rawType = raw.type as string | undefined
   const engine = mapDatabaseEngine(rawType)
 

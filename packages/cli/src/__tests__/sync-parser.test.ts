@@ -194,8 +194,8 @@ databases:
 		expect(() => parsePaasmanYaml(filePath)).toThrow('engine must be one of')
 	})
 
-	it('interpolates env vars from process.env', () => {
-		process.env.SYNC_TEST_DB_URL = 'postgres://localhost/test'
+	it('interpolates PAASMAN_ prefixed env vars from process.env', () => {
+		process.env.PAASMAN_DB_URL = 'postgres://localhost/test'
 		const filePath = join(testDir, 'paasman.yaml')
 		writeFileSync(
 			filePath,
@@ -206,7 +206,7 @@ apps:
       type: image
       image: node:20
     env:
-      DATABASE_URL: \${SYNC_TEST_DB_URL}
+      DATABASE_URL: \${PAASMAN_DB_URL}
 `,
 		)
 
@@ -214,7 +214,24 @@ apps:
 		expect(result.apps.api.env).toEqual({
 			DATABASE_URL: 'postgres://localhost/test',
 		})
-		delete process.env.SYNC_TEST_DB_URL
+		delete process.env.PAASMAN_DB_URL
+	})
+
+	it('rejects non-PAASMAN/APP prefixed env vars for security', () => {
+		const filePath = join(testDir, 'paasman.yaml')
+		writeFileSync(
+			filePath,
+			`
+apps:
+  api:
+    source:
+      type: image
+      image: node:20
+    env:
+      SECRET: \${GITHUB_TOKEN}
+`,
+		)
+		expect(() => parsePaasmanYaml(filePath)).toThrow('not allowed')
 	})
 
 	it('throws on unset env var reference', () => {

@@ -56,7 +56,8 @@ describe('createMigrationPlan', () => {
 		const plan = createMigrationPlan(app, envVars, 'prod', 'staging')
 
 		expect(plan.envVars).toEqual(envVars)
-		expect(plan.createInput.env).toEqual(envVars)
+		// env vars set separately by executor, not in createInput
+		expect(plan.createInput.env).toBeUndefined()
 	})
 
 	it('warns when source and target profiles are the same', () => {

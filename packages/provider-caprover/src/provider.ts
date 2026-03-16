@@ -96,11 +96,18 @@ export class CapRoverProvider implements PaasProvider {
     },
 
     deploy: async (id: string, _opts?: DeployOpts): Promise<Deployment> => {
+      // Fetch current app to get its image/deploy config
+      const allApps = await this.client.get<{ appDefinitions: Record<string, unknown>[] }>(
+        '/api/v2/user/apps/appDefinitions',
+      )
+      const appDef = allApps.appDefinitions.find((a) => a.appName === id)
+      const imageName = (appDef?.imageName as string) ?? ''
+
       await this.client.post('/api/v2/user/apps/appDefinitions/deploy', {
         appName: id,
         captainDefinitionContent: JSON.stringify({
           schemaVersion: 2,
-          imageName: '',
+          imageName,
         }),
       })
       // CapRover has no deployment objects; return a synthetic one

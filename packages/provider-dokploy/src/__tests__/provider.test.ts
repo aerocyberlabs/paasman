@@ -183,11 +183,9 @@ describe('DokployProvider', () => {
 
   // logs
   it('apps.logs yields log lines', async () => {
-    mockClient.get.mockResolvedValue([
-      { message: 'line 1', timestamp: '2026-01-01T00:00:00Z' },
-      { message: 'line 2', timestamp: '2026-01-01T00:00:01Z' },
-      { message: 'line 3', timestamp: '2026-01-01T00:00:02Z' },
-    ])
+    mockClient.post.mockResolvedValueOnce({
+      logs: ['line 1', 'line 2', 'line 3'],
+    })
 
     const lines: Array<{ message: string }> = []
     for await (const line of provider.apps.logs!('app-1')) {
@@ -198,6 +196,7 @@ describe('DokployProvider', () => {
     expect(lines[0].message).toBe('line 1')
     expect(lines[1].message).toBe('line 2')
     expect(lines[2].message).toBe('line 3')
+    expect(mockClient.post).toHaveBeenCalledWith('/api/application.readLogs', { applicationId: 'app-1', lines: 100 })
   })
 
   // env operations

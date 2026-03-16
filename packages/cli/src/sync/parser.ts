@@ -1,7 +1,23 @@
 import { readFileSync } from 'node:fs'
 import { parse } from 'yaml'
 import { ValidationError } from '@paasman/core'
-import { interpolateEnvVars } from '../config.js'
+
+// Restricted interpolation for sync YAML — only allows vars prefixed with PAASMAN_
+// to prevent exfiltration of sensitive env vars (e.g., GITHUB_TOKEN) via crafted YAML
+function interpolateSyncEnvVars(value: string): string {
+	return value.replace(/\$\{([^}]+)\}/g, (match, varName) => {
+		if (!varName.startsWith('PAASMAN_') && !varName.startsWith('APP_')) {
+			throw new ValidationError(
+				`Environment variable '\${${varName}}' not allowed in paasman.yaml. Only PAASMAN_* and APP_* prefixed variables are permitted for security.`,
+			)
+		}
+		const val = process.env[varName]
+		if (val === undefined) {
+			throw new ValidationError(`Environment variable '${varName}' is not set`)
+		}
+		return val
+	})
+}
 
 export interface AppSourceGit {
 	type: 'git'
@@ -108,7 +124,7 @@ function parseAppConfig(name: string, raw: Record<string, unknown>): AppConfig {
 	if (raw.env && typeof raw.env === 'object') {
 		env = {}
 		for (const [key, val] of Object.entries(raw.env as Record<string, unknown>)) {
-			env[key] = interpolateEnvVars(String(val))
+			env[key] = interpolateSyncEnvVars(String(val))
 		}
 	}
 

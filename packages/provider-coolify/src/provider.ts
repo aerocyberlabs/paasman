@@ -135,7 +135,7 @@ export class CoolifyProvider implements PaasProvider {
       if (opts?.force) params.set('force', 'true')
       const query = params.toString() ? `?${params.toString()}` : ''
       const data = await this.client.post<Record<string, unknown>>(
-        `/api/v1/applications/${id}/start${query}`,
+        `/api/v1/applications/${id}/restart${query}`,
       )
       return toDeployment(data)
     },

@@ -78,7 +78,7 @@ describe('formatEnvDiff', () => {
 			changed: {},
 			matching: {},
 		}
-		const output = formatEnvDiff(diff, false)
+		const output = formatEnvDiff(diff, false, true)
 		expect(output).toContain('NEW=val')
 		expect(output).toContain('local only')
 	})
@@ -90,7 +90,7 @@ describe('formatEnvDiff', () => {
 			changed: {},
 			matching: {},
 		}
-		const output = formatEnvDiff(diff, false)
+		const output = formatEnvDiff(diff, false, true)
 		expect(output).toContain('OLD=val')
 		expect(output).toContain('remote only')
 	})
@@ -102,7 +102,7 @@ describe('formatEnvDiff', () => {
 			changed: { DB: { local: 'new', remote: 'old' } },
 			matching: {},
 		}
-		const output = formatEnvDiff(diff, false)
+		const output = formatEnvDiff(diff, false, true)
 		expect(output).toContain('DB')
 		expect(output).toContain('value differs')
 	})
@@ -114,7 +114,7 @@ describe('formatEnvDiff', () => {
 			changed: {},
 			matching: { SAME: 'val' },
 		}
-		const output = formatEnvDiff(diff, false)
+		const output = formatEnvDiff(diff, false, true)
 		expect(output).toContain('1 matching key(s) hidden')
 		expect(output).not.toContain('SAME=val')
 	})
@@ -126,7 +126,7 @@ describe('formatEnvDiff', () => {
 			changed: {},
 			matching: { SAME: 'val' },
 		}
-		const output = formatEnvDiff(diff, true)
+		const output = formatEnvDiff(diff, true, true)
 		expect(output).toContain('SAME=val')
 	})
 })

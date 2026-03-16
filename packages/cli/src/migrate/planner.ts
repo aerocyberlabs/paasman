@@ -62,7 +62,7 @@ export function createMigrationPlan(
 		name: app.name,
 		source,
 		domains: app.domains.length > 0 ? app.domains : undefined,
-		env: envVars,
+		// env vars set separately after creation via executor to avoid double-set
 	}
 
 	return {

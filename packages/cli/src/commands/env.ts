@@ -54,19 +54,25 @@ export function parseEnvFile(content: string): Record<string, string> {
 	return vars
 }
 
-export function formatEnvDiff(diff: EnvDiffResult, full: boolean): string {
+function maskValue(value: string): string {
+	if (value.length <= 4) return '****'
+	return value.slice(0, 2) + '****' + value.slice(-2)
+}
+
+export function formatEnvDiff(diff: EnvDiffResult, full: boolean, reveal = false): string {
 	const lines: string[] = []
+	const v = (val: string) => reveal ? val : maskValue(val)
 
 	for (const [key, value] of Object.entries(diff.localOnly)) {
-		lines.push(chalk.green(`  + ${key}=${value}`) + chalk.gray('  (local only — will be added on push)'))
+		lines.push(chalk.green(`  + ${key}=${v(value)}`) + chalk.gray('  (local only — will be added on push)'))
 	}
 
 	for (const [key, value] of Object.entries(diff.remoteOnly)) {
-		lines.push(chalk.red(`  - ${key}=${value}`) + chalk.gray('  (remote only — will be removed on push)'))
+		lines.push(chalk.red(`  - ${key}=${v(value)}`) + chalk.gray('  (remote only — will be removed on push)'))
 	}
 
 	for (const [key, { local, remote }] of Object.entries(diff.changed)) {
-		lines.push(chalk.yellow(`  ~ ${key}: ${remote} → ${local}`) + chalk.gray('  (value differs)'))
+		lines.push(chalk.yellow(`  ~ ${key}: ${v(remote)} → ${v(local)}`) + chalk.gray('  (value differs)'))
 	}
 
 	const matchCount = Object.keys(diff.matching).length
@@ -163,6 +169,7 @@ export function envCommand(getPaasman: () => Promise<Paasman>): Command {
 		.description('Compare local .env file with remote environment variables')
 		.option('-f, --file <file>', 'Local env file to compare', '.env')
 		.option('--full', 'Show matching keys as well')
+		.option('--reveal', 'Show full values (default: masked for security)')
 		.action(async (appId, opts) => {
 			const pm = await getPaasman()
 			const remoteVars = await pm.env.pull(appId)
@@ -179,7 +186,7 @@ export function envCommand(getPaasman: () => Promise<Paasman>): Command {
 			const diff = compareEnvVars(localVars, remoteVars)
 
 			console.log(`\nComparing local ${opts.file} with remote env for ${appId}\n`)
-			console.log(formatEnvDiff(diff, opts.full ?? false))
+			console.log(formatEnvDiff(diff, opts.full ?? false, opts.reveal ?? false))
 			console.log()
 		})
 

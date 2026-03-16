@@ -112,6 +112,9 @@ describe('normalizers', () => {
 }
 
 export function scaffold(vars: TemplateVars, baseDir: string = process.cwd()): string {
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(vars.name)) {
+    throw new Error(`Invalid provider name: '${vars.name}'. Only lowercase letters, digits, and hyphens allowed.`)
+  }
   const dir = join(baseDir, `paasman-provider-${vars.name}`)
   const files = generateFiles(vars)
 

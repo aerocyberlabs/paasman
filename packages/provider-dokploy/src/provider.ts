@@ -66,12 +66,15 @@ export class DokployProvider implements PaasProvider {
     }
   }
 
-  private async *getLogs(id: string, _opts?: LogOpts): AsyncGenerator<LogLine> {
-    const data = await this.client.get<Array<{ message: string; timestamp?: string }>>(
-      '/api/deployment.all', { applicationId: id },
+  private async *getLogs(id: string, opts?: LogOpts): AsyncGenerator<LogLine> {
+    const data = await this.client.post<{ logs: string[] | string }>(
+      '/api/application.readLogs', { applicationId: id, lines: opts?.lines ?? 100 },
     )
-    for (const entry of data) {
-      yield { message: entry.message, stream: 'stdout' as const }
+    const lines = Array.isArray(data.logs) ? data.logs : (data.logs ?? '').split('\n')
+    for (const line of lines) {
+      if (line.trim()) {
+        yield { message: line, stream: 'stdout' as const }
+      }
     }
   }
 

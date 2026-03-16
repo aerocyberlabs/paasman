@@ -7,6 +7,8 @@ export interface DokkuSshConfig {
   username?: string
   privateKeyPath?: string
   privateKey?: string
+  knownHostsPath?: string
+  strictHostKeyChecking?: boolean
 }
 
 export class DokkuSshClient {
@@ -28,7 +30,9 @@ export class DokkuSshClient {
           : this.config.privateKeyPath
             ? { privateKeyPath: this.config.privateKeyPath }
             : {}),
-      })
+        strictHostKeyChecking: this.config.strictHostKeyChecking ?? true,
+        knownHosts: this.config.knownHostsPath ?? '~/.ssh/known_hosts',
+      } as Record<string, unknown>)
       this.connected = true
     } catch (err) {
       throw new ConnectionError('dokku', this.config.host, err as Error)

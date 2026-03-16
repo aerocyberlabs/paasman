@@ -75,7 +75,20 @@ export function appsCommand(getPaasman: () => Promise<Paasman>): Command {
 		.action(async (id, opts) => {
 			const pm = await getPaasman()
 			const app = await pm.apps.get(id)
-			console.log(formatJson(app))
+			if (opts.json) {
+				console.log(formatJson(app))
+			} else {
+				console.log(`Name:     ${app.name}`)
+				console.log(`ID:       ${app.id}`)
+				console.log(`Status:   ${app.status}`)
+				console.log(`Domains:  ${app.domains.join(', ') || '-'}`)
+				if (app.meta.repository) console.log(`Repo:     ${app.meta.repository}`)
+				if (app.meta.branch) console.log(`Branch:   ${app.meta.branch}`)
+				if (app.meta.image) console.log(`Image:    ${app.meta.image}`)
+				if (app.meta.buildPack) console.log(`Build:    ${app.meta.buildPack}`)
+				console.log(`Created:  ${app.createdAt.toISOString()}`)
+				console.log(`Updated:  ${app.updatedAt.toISOString()}`)
+			}
 		})
 
 	cmd

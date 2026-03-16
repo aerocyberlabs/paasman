@@ -15,10 +15,26 @@ export interface WebhookEvent {
 	details?: Record<string, unknown>
 }
 
+function validateWebhookUrl(url: string): void {
+	const parsed = new URL(url)
+	if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+		throw new Error(`Webhook URL must use http(s): ${url}`)
+	}
+	const hostname = parsed.hostname
+	if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1'
+		|| hostname.startsWith('169.254.') || hostname.startsWith('10.')
+		|| hostname.startsWith('192.168.') || /^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) {
+		throw new Error(`Webhook URL must not target private/local addresses: ${url}`)
+	}
+}
+
 export class WebhookManager {
 	private configs: WebhookConfig[]
 
 	constructor(configs: WebhookConfig[]) {
+		for (const config of configs) {
+			validateWebhookUrl(config.url)
+		}
 		this.configs = configs
 	}
 
