@@ -1,5 +1,6 @@
 import * as core from "@actions/core";
 import { Paasman } from "@paasman/core";
+import type { PaasProvider } from "@paasman/core";
 import { parseInputs } from "./inputs.js";
 
 async function run() {
@@ -14,7 +15,11 @@ async function run() {
 		}
 
 		const providerModule = await import(`@paasman/provider-${inputs.provider}`);
-		const ProviderClass = Object.values(providerModule).find((v) => typeof v === "function") as any;
+		const ProviderClass = Object.values(providerModule).find(
+			(v) => typeof v === "function",
+		) as new (
+			config: Record<string, unknown>,
+		) => PaasProvider;
 		const provider = new ProviderClass({ baseUrl: inputs.serverUrl, token: inputs.token });
 		const pm = new Paasman({ provider });
 
