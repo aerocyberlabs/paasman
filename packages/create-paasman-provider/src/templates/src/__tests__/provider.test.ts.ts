@@ -1,6 +1,6 @@
 export function providerTestTemplate(vars: { name: string }): string {
-  const Name = vars.name.charAt(0).toUpperCase() + vars.name.slice(1)
-  return `import { describe, it, expect } from 'vitest'
+	const Name = vars.name.charAt(0).toUpperCase() + vars.name.slice(1);
+	return `import { describe, it, expect } from 'vitest'
 import { ${Name}Provider } from '../provider.js'
 
 describe('${Name}Provider', () => {
@@ -27,5 +27,5 @@ describe('${Name}Provider', () => {
 
   // TODO: Add integration tests with mocked HTTP responses
 })
-`
+`;
 }

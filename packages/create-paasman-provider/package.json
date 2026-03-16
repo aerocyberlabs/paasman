@@ -1,44 +1,34 @@
 {
-  "name": "create-paasman-provider",
-  "version": "0.1.0",
-  "description": "Scaffold a new Paasman provider project",
-  "type": "module",
-  "bin": {
-    "create-paasman-provider": "./dist/index.js"
-  },
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "tsup",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "clean": "rm -rf dist"
-  },
-  "dependencies": {
-    "@inquirer/prompts": "^7.10.1"
-  },
-  "devDependencies": {
-    "vitest": "^4.1.0"
-  },
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/aerocyberlabs/paasman.git",
-    "directory": "packages/create-paasman-provider"
-  },
-  "homepage": "https://github.com/aerocyberlabs/paasman#readme",
-  "bugs": {
-    "url": "https://github.com/aerocyberlabs/paasman/issues"
-  },
-  "author": "AeroCyberLabs",
-  "keywords": [
-    "paasman",
-    "paas",
-    "self-hosted",
-    "deployment",
-    "devops",
-    "scaffolding",
-    "generator"
-  ]
+	"name": "create-paasman-provider",
+	"version": "0.1.0",
+	"description": "Scaffold a new Paasman provider project",
+	"type": "module",
+	"bin": {
+		"create-paasman-provider": "./dist/index.js"
+	},
+	"files": ["dist"],
+	"scripts": {
+		"build": "tsup",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"clean": "rm -rf dist"
+	},
+	"dependencies": {
+		"@inquirer/prompts": "^7.10.1"
+	},
+	"devDependencies": {
+		"vitest": "^4.1.0"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/aerocyberlabs/paasman.git",
+		"directory": "packages/create-paasman-provider"
+	},
+	"homepage": "https://github.com/aerocyberlabs/paasman#readme",
+	"bugs": {
+		"url": "https://github.com/aerocyberlabs/paasman/issues"
+	},
+	"author": "AeroCyberLabs",
+	"keywords": ["paasman", "paas", "self-hosted", "deployment", "devops", "scaffolding", "generator"]
 }

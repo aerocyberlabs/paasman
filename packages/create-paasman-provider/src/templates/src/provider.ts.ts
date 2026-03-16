@@ -1,6 +1,6 @@
 export function providerTemplate(vars: { name: string }): string {
-  const Name = vars.name.charAt(0).toUpperCase() + vars.name.slice(1)
-  return `import type {
+	const Name = vars.name.charAt(0).toUpperCase() + vars.name.slice(1);
+	return `import type {
   PaasProvider, ProviderCapabilities, AppOperations, EnvOperations,
   ServerOperations, DatabaseOperations, DeploymentOperations,
   HealthStatus, App, CreateAppInput, DeployOpts,
@@ -154,5 +154,5 @@ export class ${Name}Provider implements PaasProvider {
     },
   }
 }
-`
+`;
 }

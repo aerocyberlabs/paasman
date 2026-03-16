@@ -1,68 +1,68 @@
-import Table from 'cli-table3'
-import chalk from 'chalk'
-import type { App, Server, Database, Deployment, EnvVar } from '@paasman/core'
+import type { App, Database, Deployment, EnvVar, Server } from "@paasman/core";
+import chalk from "chalk";
+import Table from "cli-table3";
 
 export function formatJson(data: unknown): string {
-	return JSON.stringify(data, null, 2)
+	return JSON.stringify(data, null, 2);
 }
 
 function statusColor(status: string): string {
 	switch (status) {
-		case 'running':
-		case 'reachable':
-		case 'success':
-			return chalk.green(status)
-		case 'stopped':
-		case 'cancelled':
-			return chalk.yellow(status)
-		case 'failed':
-		case 'unreachable':
-			return chalk.red(status)
-		case 'deploying':
-		case 'building':
-		case 'queued':
-			return chalk.blue(status)
+		case "running":
+		case "reachable":
+		case "success":
+			return chalk.green(status);
+		case "stopped":
+		case "cancelled":
+			return chalk.yellow(status);
+		case "failed":
+		case "unreachable":
+			return chalk.red(status);
+		case "deploying":
+		case "building":
+		case "queued":
+			return chalk.blue(status);
 		default:
-			return chalk.gray(status)
+			return chalk.gray(status);
 	}
 }
 
 export function formatAppsTable(apps: App[]): string {
 	const table = new Table({
-		head: ['ID', 'Name', 'Status', 'Domains'],
-		style: { head: ['cyan'] },
-	})
+		head: ["ID", "Name", "Status", "Domains"],
+		style: { head: ["cyan"] },
+	});
 
 	for (const app of apps) {
 		table.push([
 			app.id.slice(0, 12),
 			app.name,
 			statusColor(app.status),
-			app.domains.join(', ') || '-',
-		])
+			app.domains.join(", ") || "-",
+		]);
 	}
 
-	return table.toString()
+	return table.toString();
 }
 
 export function formatServersTable(servers: Server[]): string {
 	const table = new Table({
-		head: ['ID', 'Name', 'Status', 'IP'],
-		style: { head: ['cyan'] },
-	})
+		head: ["ID", "Name", "Status", "IP"],
+		style: { head: ["cyan"] },
+	});
 
 	for (const s of servers) {
-		table.push([s.id.slice(0, 12), s.name, statusColor(s.status), s.ip])
+		table.push([s.id.slice(0, 12), s.name, statusColor(s.status), s.ip]);
 	}
 
-	return table.toString()
+	return table.toString();
 }
 
 export function formatDeploymentsTable(deployments: Deployment[]): string {
 	const table = new Table({
-		head: ['ID', 'App', 'Status', 'Triggered'],
-		style: { head: ['cyan'] },
-	})
+		head: ["ID", "App", "Status", "Triggered"],
+		style: { head: ["cyan"] },
+	});
 
 	for (const d of deployments) {
 		table.push([
@@ -70,70 +70,70 @@ export function formatDeploymentsTable(deployments: Deployment[]): string {
 			d.appId.slice(0, 12),
 			statusColor(d.status),
 			d.triggeredAt.toISOString(),
-		])
+		]);
 	}
 
-	return table.toString()
+	return table.toString();
 }
 
 export function formatEnvTable(envs: EnvVar[]): string {
 	const table = new Table({
-		head: ['Key', 'Value', 'Secret', 'Scope'],
-		style: { head: ['cyan'] },
-	})
+		head: ["Key", "Value", "Secret", "Scope"],
+		style: { head: ["cyan"] },
+	});
 
 	for (const e of envs) {
 		table.push([
 			e.key,
-			e.isSecret ? chalk.gray('********') : e.value,
-			e.isSecret ? chalk.yellow('yes') : 'no',
-			e.scope ?? '-',
-		])
+			e.isSecret ? chalk.gray("********") : e.value,
+			e.isSecret ? chalk.yellow("yes") : "no",
+			e.scope ?? "-",
+		]);
 	}
 
-	return table.toString()
+	return table.toString();
 }
 
 export interface AllProfilesAppRow {
-	profile: string
-	app?: App
-	error?: string
+	profile: string;
+	app?: App;
+	error?: string;
 }
 
 export function formatAllProfilesAppsTable(rows: AllProfilesAppRow[]): string {
 	const table = new Table({
-		head: ['Profile', 'ID', 'Name', 'Status', 'Domains'],
-		style: { head: ['cyan'] },
-	})
+		head: ["Profile", "ID", "Name", "Status", "Domains"],
+		style: { head: ["cyan"] },
+	});
 
 	for (const row of rows) {
 		if (row.error) {
-			table.push([row.profile, chalk.red('error'), row.error, '', ''])
+			table.push([row.profile, chalk.red("error"), row.error, "", ""]);
 		} else if (row.app) {
 			table.push([
 				row.profile,
 				row.app.id.slice(0, 12),
 				row.app.name,
 				row.app.status,
-				row.app.domains.join(', ') || '-',
-			])
+				row.app.domains.join(", ") || "-",
+			]);
 		} else {
-			table.push([row.profile, chalk.gray('-'), chalk.gray('No apps'), '', ''])
+			table.push([row.profile, chalk.gray("-"), chalk.gray("No apps"), "", ""]);
 		}
 	}
 
-	return table.toString()
+	return table.toString();
 }
 
 export function formatDatabasesTable(dbs: Database[]): string {
 	const table = new Table({
-		head: ['ID', 'Name', 'Engine', 'Status'],
-		style: { head: ['cyan'] },
-	})
+		head: ["ID", "Name", "Engine", "Status"],
+		style: { head: ["cyan"] },
+	});
 
 	for (const db of dbs) {
-		table.push([db.id.slice(0, 12), db.name, db.engine, statusColor(db.status)])
+		table.push([db.id.slice(0, 12), db.name, db.engine, statusColor(db.status)]);
 	}
 
-	return table.toString()
+	return table.toString();
 }

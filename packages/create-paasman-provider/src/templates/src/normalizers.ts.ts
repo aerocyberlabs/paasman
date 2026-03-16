@@ -1,5 +1,5 @@
 export function normalizersTemplate(vars: { name: string }): string {
-  return `import type { App, AppStatus, Server, Deployment, EnvVar, DeploymentStatus } from '@paasman/core'
+	return `import type { App, AppStatus, Server, Deployment, EnvVar, DeploymentStatus } from '@paasman/core'
 
 // TODO: Adapt these normalizers to match the ${vars.name} API response format.
 // The functions below are skeleton implementations that assume a generic REST API shape.
@@ -72,5 +72,5 @@ export function toEnvVar(raw: Record<string, unknown>): EnvVar {
     isSecret: (raw.is_secret as boolean) ?? false,
   }
 }
-`
+`;
 }

@@ -17,10 +17,10 @@
  * ```
  */
 export function parseAppsList(output: string): string[] {
-  return output
-    .split('\n')
-    .filter((line) => !line.startsWith('===') && line.trim() !== '')
-    .map((line) => line.trim())
+	return output
+		.split("\n")
+		.filter((line) => !line.startsWith("===") && line.trim() !== "")
+		.map((line) => line.trim());
 }
 
 /**
@@ -35,23 +35,23 @@ export function parseAppsList(output: string): string[] {
  * ```
  */
 export function parseAppReport(output: string): Record<string, string> {
-  const result: Record<string, string> = {}
+	const result: Record<string, string> = {};
 
-  for (const line of output.split('\n')) {
-    if (line.startsWith('===')) continue
-    const trimmed = line.trim()
-    if (!trimmed) continue
+	for (const line of output.split("\n")) {
+		if (line.startsWith("===")) continue;
+		const trimmed = line.trim();
+		if (!trimmed) continue;
 
-    // Lines are formatted as "Key:   value" with variable whitespace
-    const colonIndex = trimmed.indexOf(':')
-    if (colonIndex === -1) continue
+		// Lines are formatted as "Key:   value" with variable whitespace
+		const colonIndex = trimmed.indexOf(":");
+		if (colonIndex === -1) continue;
 
-    const key = trimmed.slice(0, colonIndex).trim()
-    const value = trimmed.slice(colonIndex + 1).trim()
-    result[key] = value
-  }
+		const key = trimmed.slice(0, colonIndex).trim();
+		const value = trimmed.slice(colonIndex + 1).trim();
+		result[key] = value;
+	}
 
-  return result
+	return result;
 }
 
 /**
@@ -65,25 +65,25 @@ export function parseAppReport(output: string): Record<string, string> {
  * ```
  */
 export function parseConfigShow(output: string): Record<string, string> {
-  const result: Record<string, string> = {}
+	const result: Record<string, string> = {};
 
-  for (const line of output.split('\n')) {
-    if (line.startsWith('===')) continue
-    const trimmed = line.trim()
-    if (!trimmed) continue
+	for (const line of output.split("\n")) {
+		if (line.startsWith("===")) continue;
+		const trimmed = line.trim();
+		if (!trimmed) continue;
 
-    // Format: "KEY:   value" — first colon is the separator
-    const colonIndex = trimmed.indexOf(':')
-    if (colonIndex === -1) continue
+		// Format: "KEY:   value" — first colon is the separator
+		const colonIndex = trimmed.indexOf(":");
+		if (colonIndex === -1) continue;
 
-    const key = trimmed.slice(0, colonIndex).trim()
-    const value = trimmed.slice(colonIndex + 1).trim()
-    if (key) {
-      result[key] = value
-    }
-  }
+		const key = trimmed.slice(0, colonIndex).trim();
+		const value = trimmed.slice(colonIndex + 1).trim();
+		if (key) {
+			result[key] = value;
+		}
+	}
 
-  return result
+	return result;
 }
 
 /**
@@ -96,23 +96,23 @@ export function parseConfigShow(output: string): Record<string, string> {
  * ```
  */
 export function parseConfigExport(output: string): Record<string, string> {
-  const result: Record<string, string> = {}
+	const result: Record<string, string> = {};
 
-  for (const line of output.split('\n')) {
-    const trimmed = line.trim()
-    if (!trimmed) continue
+	for (const line of output.split("\n")) {
+		const trimmed = line.trim();
+		if (!trimmed) continue;
 
-    const eqIndex = trimmed.indexOf('=')
-    if (eqIndex === -1) continue
+		const eqIndex = trimmed.indexOf("=");
+		if (eqIndex === -1) continue;
 
-    const key = trimmed.slice(0, eqIndex)
-    const value = trimmed.slice(eqIndex + 1)
-    if (key) {
-      result[key] = value
-    }
-  }
+		const key = trimmed.slice(0, eqIndex);
+		const value = trimmed.slice(eqIndex + 1);
+		if (key) {
+			result[key] = value;
+		}
+	}
 
-  return result
+	return result;
 }
 
 /**
@@ -126,10 +126,10 @@ export function parseConfigExport(output: string): Record<string, string> {
  * ```
  */
 export function parseDatabaseList(output: string): string[] {
-  return output
-    .split('\n')
-    .filter((line) => !line.startsWith('===') && line.trim() !== '')
-    .map((line) => line.trim())
+	return output
+		.split("\n")
+		.filter((line) => !line.startsWith("===") && line.trim() !== "")
+		.map((line) => line.trim());
 }
 
 /**
@@ -150,22 +150,22 @@ export function parseDatabaseList(output: string): string[] {
  * ```
  */
 export function parseDatabaseInfo(output: string): Record<string, string> {
-  const result: Record<string, string> = {}
+	const result: Record<string, string> = {};
 
-  for (const line of output.split('\n')) {
-    if (line.startsWith('===')) continue
-    const trimmed = line.trim()
-    if (!trimmed) continue
+	for (const line of output.split("\n")) {
+		if (line.startsWith("===")) continue;
+		const trimmed = line.trim();
+		if (!trimmed) continue;
 
-    const colonIndex = trimmed.indexOf(':')
-    if (colonIndex === -1) continue
+		const colonIndex = trimmed.indexOf(":");
+		if (colonIndex === -1) continue;
 
-    const key = trimmed.slice(0, colonIndex).trim()
-    const value = trimmed.slice(colonIndex + 1).trim()
-    result[key] = value
-  }
+		const key = trimmed.slice(0, colonIndex).trim();
+		const value = trimmed.slice(colonIndex + 1).trim();
+		result[key] = value;
+	}
 
-  return result
+	return result;
 }
 
 /**
@@ -178,27 +178,30 @@ export function parseDatabaseInfo(output: string): Record<string, string> {
  * ```
  */
 export function parseLogLines(output: string): Array<{
-  timestamp?: string
-  message: string
-  stream: 'stdout' | 'stderr'
+	timestamp?: string;
+	message: string;
+	stream: "stdout" | "stderr";
 }> {
-  if (!output.trim()) return []
+	if (!output.trim()) return [];
 
-  return output.split('\n').filter((line) => line.trim() !== '').map((line) => {
-    // Try to extract timestamp from the beginning of the line
-    // Dokku log format: "2026-01-15T10:30:00.000Z app[web.1]: message"
-    const isoMatch = line.match(/^(\d{4}-\d{2}-\d{2}T[\d:.]+Z?)\s+(.*)$/)
-    if (isoMatch) {
-      return {
-        timestamp: isoMatch[1],
-        message: isoMatch[2],
-        stream: 'stdout' as const,
-      }
-    }
+	return output
+		.split("\n")
+		.filter((line) => line.trim() !== "")
+		.map((line) => {
+			// Try to extract timestamp from the beginning of the line
+			// Dokku log format: "2026-01-15T10:30:00.000Z app[web.1]: message"
+			const isoMatch = line.match(/^(\d{4}-\d{2}-\d{2}T[\d:.]+Z?)\s+(.*)$/);
+			if (isoMatch) {
+				return {
+					timestamp: isoMatch[1],
+					message: isoMatch[2],
+					stream: "stdout" as const,
+				};
+			}
 
-    return {
-      message: line,
-      stream: 'stdout' as const,
-    }
-  })
+			return {
+				message: line,
+				stream: "stdout" as const,
+			};
+		});
 }

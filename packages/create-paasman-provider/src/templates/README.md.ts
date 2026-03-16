@@ -1,6 +1,6 @@
 export function readmeTemplate(vars: { name: string; description: string }): string {
-  const Name = vars.name.charAt(0).toUpperCase() + vars.name.slice(1)
-  return `# @paasman/provider-${vars.name}
+	const Name = vars.name.charAt(0).toUpperCase() + vars.name.slice(1);
+	return `# @paasman/provider-${vars.name}
 
 ${vars.description}
 
@@ -45,5 +45,5 @@ npm test
 ## License
 
 MIT
-`
+`;
 }

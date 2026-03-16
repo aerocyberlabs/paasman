@@ -1,12 +1,12 @@
-import { defineConfig } from 'vitest/config'
-import { resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { defineConfig } from "vitest/config";
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url))
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig({
-  root: __dirname,
-  test: {
-    include: ['src/**/*.test.ts'],
-  },
-})
+	root: __dirname,
+	test: {
+		include: ["src/**/*.test.ts"],
+	},
+});

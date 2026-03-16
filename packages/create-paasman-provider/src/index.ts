@@ -1,45 +1,45 @@
 #!/usr/bin/env node
-import { input } from '@inquirer/prompts'
-import { mkdirSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { input } from "@inquirer/prompts";
 
-import { packageJsonTemplate } from './templates/package.json.js'
-import { tsconfigTemplate } from './templates/tsconfig.json.js'
-import { tsupConfigTemplate } from './templates/tsup.config.ts.js'
-import { vitestConfigTemplate } from './templates/vitest.config.ts.js'
-import { readmeTemplate } from './templates/README.md.js'
-import { indexTemplate } from './templates/src/index.ts.js'
-import { clientTemplate } from './templates/src/client.ts.js'
-import { normalizersTemplate } from './templates/src/normalizers.ts.js'
-import { providerTemplate } from './templates/src/provider.ts.js'
-import { providerTestTemplate } from './templates/src/__tests__/provider.test.ts.js'
+import { readmeTemplate } from "./templates/README.md.js";
+import { packageJsonTemplate } from "./templates/package.json.js";
+import { providerTestTemplate } from "./templates/src/__tests__/provider.test.ts.js";
+import { clientTemplate } from "./templates/src/client.ts.js";
+import { indexTemplate } from "./templates/src/index.ts.js";
+import { normalizersTemplate } from "./templates/src/normalizers.ts.js";
+import { providerTemplate } from "./templates/src/provider.ts.js";
+import { tsconfigTemplate } from "./templates/tsconfig.json.js";
+import { tsupConfigTemplate } from "./templates/tsup.config.ts.js";
+import { vitestConfigTemplate } from "./templates/vitest.config.ts.js";
 
 export interface TemplateVars {
-  name: string
-  author: string
-  description: string
+	name: string;
+	author: string;
+	description: string;
 }
 
 export function generateFiles(vars: TemplateVars): Array<{ path: string; content: string }> {
-  return [
-    { path: 'package.json', content: packageJsonTemplate(vars) },
-    { path: 'tsconfig.json', content: tsconfigTemplate() },
-    { path: 'tsup.config.ts', content: tsupConfigTemplate() },
-    { path: 'vitest.config.ts', content: vitestConfigTemplate() },
-    { path: 'README.md', content: readmeTemplate(vars) },
-    { path: 'src/index.ts', content: indexTemplate(vars) },
-    { path: 'src/client.ts', content: clientTemplate(vars) },
-    { path: 'src/normalizers.ts', content: normalizersTemplate(vars) },
-    { path: 'src/provider.ts', content: providerTemplate(vars) },
-    { path: 'src/__tests__/client.test.ts', content: generateClientTest(vars) },
-    { path: 'src/__tests__/normalizers.test.ts', content: generateNormalizersTest(vars) },
-    { path: 'src/__tests__/provider.test.ts', content: providerTestTemplate(vars) },
-  ]
+	return [
+		{ path: "package.json", content: packageJsonTemplate(vars) },
+		{ path: "tsconfig.json", content: tsconfigTemplate() },
+		{ path: "tsup.config.ts", content: tsupConfigTemplate() },
+		{ path: "vitest.config.ts", content: vitestConfigTemplate() },
+		{ path: "README.md", content: readmeTemplate(vars) },
+		{ path: "src/index.ts", content: indexTemplate(vars) },
+		{ path: "src/client.ts", content: clientTemplate(vars) },
+		{ path: "src/normalizers.ts", content: normalizersTemplate(vars) },
+		{ path: "src/provider.ts", content: providerTemplate(vars) },
+		{ path: "src/__tests__/client.test.ts", content: generateClientTest(vars) },
+		{ path: "src/__tests__/normalizers.test.ts", content: generateNormalizersTest(vars) },
+		{ path: "src/__tests__/provider.test.ts", content: providerTestTemplate(vars) },
+	];
 }
 
 function generateClientTest(vars: TemplateVars): string {
-  const Name = vars.name.charAt(0).toUpperCase() + vars.name.slice(1)
-  return `import { describe, it, expect } from 'vitest'
+	const Name = vars.name.charAt(0).toUpperCase() + vars.name.slice(1);
+	return `import { describe, it, expect } from 'vitest'
 import { ${Name}Client } from '../client.js'
 
 describe('${Name}Client', () => {
@@ -50,11 +50,11 @@ describe('${Name}Client', () => {
 
   // TODO: Add tests with mocked fetch responses
 })
-`
+`;
 }
 
 function generateNormalizersTest(vars: TemplateVars): string {
-  return `import { describe, it, expect } from 'vitest'
+	return `import { describe, it, expect } from 'vitest'
 import { toApp, toServer, toDeployment, toEnvVar } from '../normalizers.js'
 
 describe('normalizers', () => {
@@ -108,48 +108,50 @@ describe('normalizers', () => {
     })
   })
 })
-`
+`;
 }
 
 export function scaffold(vars: TemplateVars, baseDir: string = process.cwd()): string {
-  if (!/^[a-z0-9][a-z0-9-]*$/.test(vars.name)) {
-    throw new Error(`Invalid provider name: '${vars.name}'. Only lowercase letters, digits, and hyphens allowed.`)
-  }
-  const dir = join(baseDir, `paasman-provider-${vars.name}`)
-  const files = generateFiles(vars)
+	if (!/^[a-z0-9][a-z0-9-]*$/.test(vars.name)) {
+		throw new Error(
+			`Invalid provider name: '${vars.name}'. Only lowercase letters, digits, and hyphens allowed.`,
+		);
+	}
+	const dir = join(baseDir, `paasman-provider-${vars.name}`);
+	const files = generateFiles(vars);
 
-  for (const file of files) {
-    const filePath = join(dir, file.path)
-    const fileDir = join(filePath, '..')
-    mkdirSync(fileDir, { recursive: true })
-    writeFileSync(filePath, file.content, 'utf-8')
-  }
+	for (const file of files) {
+		const filePath = join(dir, file.path);
+		const fileDir = join(filePath, "..");
+		mkdirSync(fileDir, { recursive: true });
+		writeFileSync(filePath, file.content, "utf-8");
+	}
 
-  return dir
+	return dir;
 }
 
 async function main() {
-  console.log('\nCreate Paasman Provider\n')
+	console.log("\nCreate Paasman Provider\n");
 
-  const name = await input({ message: 'Provider name (e.g., portainer)' })
-  const author = await input({ message: 'Author name' })
-  const description = await input({
-    message: 'Description',
-    default: `${name} provider for Paasman`,
-  })
+	const name = await input({ message: "Provider name (e.g., portainer)" });
+	const author = await input({ message: "Author name" });
+	const description = await input({
+		message: "Description",
+		default: `${name} provider for Paasman`,
+	});
 
-  const dir = scaffold({ name, author, description })
+	const dir = scaffold({ name, author, description });
 
-  console.log(`\nProvider scaffolded at ${dir}\n`)
-  console.log('Next steps:')
-  console.log(`  cd paasman-provider-${name}`)
-  console.log('  npm install')
-  console.log('  npm run build')
-  console.log('  npm test')
-  console.log('')
+	console.log(`\nProvider scaffolded at ${dir}\n`);
+	console.log("Next steps:");
+	console.log(`  cd paasman-provider-${name}`);
+	console.log("  npm install");
+	console.log("  npm run build");
+	console.log("  npm test");
+	console.log("");
 }
 
 main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+	console.error(err);
+	process.exit(1);
+});

@@ -1,6 +1,6 @@
 export function clientTemplate(vars: { name: string }): string {
-  const Name = vars.name.charAt(0).toUpperCase() + vars.name.slice(1)
-  return `import {
+	const Name = vars.name.charAt(0).toUpperCase() + vars.name.slice(1);
+	return `import {
   AuthError, ConnectionError, NotFoundError, ConflictError,
   RateLimitError, ProviderError,
 } from '@paasman/core'
@@ -72,5 +72,5 @@ export class ${Name}Client {
     return this.request<T>(path, { method: 'DELETE' })
   }
 }
-`
+`;
 }

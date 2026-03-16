@@ -1,5 +1,5 @@
 export function tsupConfigTemplate(): string {
-  return `import { defineConfig } from 'tsup'
+	return `import { defineConfig } from 'tsup'
 
 export default defineConfig({
   entry: ['src/index.ts'],
@@ -8,5 +8,5 @@ export default defineConfig({
   clean: true,
   sourcemap: true,
 })
-`
+`;
 }

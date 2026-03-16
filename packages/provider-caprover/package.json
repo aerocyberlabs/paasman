@@ -1,53 +1,44 @@
 {
-  "name": "@paasman/provider-caprover",
-  "version": "0.1.0",
-  "description": "CapRover provider for Paasman",
-  "type": "module",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
-    }
-  },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "build": "tsup",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "clean": "rm -rf dist"
-  },
-  "dependencies": {
-    "@paasman/core": "workspace:*"
-  },
-  "devDependencies": {
-    "vitest": "^4.1.0"
-  },
-  "peerDependencies": {
-    "@paasman/core": "^0.1.0"
-  },
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/aerocyberlabs/paasman.git",
-    "directory": "packages/provider-caprover"
-  },
-  "homepage": "https://github.com/aerocyberlabs/paasman#readme",
-  "bugs": {
-    "url": "https://github.com/aerocyberlabs/paasman/issues"
-  },
-  "author": "AeroCyberLabs",
-  "keywords": [
-    "paasman",
-    "paas",
-    "self-hosted",
-    "deployment",
-    "devops",
-    "caprover"
-  ]
+	"name": "@paasman/provider-caprover",
+	"version": "0.1.0",
+	"description": "CapRover provider for Paasman",
+	"type": "module",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/index.cjs",
+			"types": "./dist/index.d.ts"
+		}
+	},
+	"main": "./dist/index.cjs",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"files": ["dist"],
+	"scripts": {
+		"build": "tsup",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"clean": "rm -rf dist"
+	},
+	"dependencies": {
+		"@paasman/core": "workspace:*"
+	},
+	"devDependencies": {
+		"vitest": "^4.1.0"
+	},
+	"peerDependencies": {
+		"@paasman/core": "^0.1.0"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/aerocyberlabs/paasman.git",
+		"directory": "packages/provider-caprover"
+	},
+	"homepage": "https://github.com/aerocyberlabs/paasman#readme",
+	"bugs": {
+		"url": "https://github.com/aerocyberlabs/paasman/issues"
+	},
+	"author": "AeroCyberLabs",
+	"keywords": ["paasman", "paas", "self-hosted", "deployment", "devops", "caprover"]
 }

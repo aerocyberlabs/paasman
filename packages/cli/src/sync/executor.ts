@@ -1,16 +1,16 @@
-import type { Paasman, CreateAppInput, CreateDatabaseInput, DatabaseEngine } from '@paasman/core'
-import { UnsupportedError } from '@paasman/core'
-import chalk from 'chalk'
-import type { SyncPlan } from './differ.js'
-import type { PaasmanYaml } from './parser.js'
+import type { CreateAppInput, CreateDatabaseInput, DatabaseEngine, Paasman } from "@paasman/core";
+import { UnsupportedError } from "@paasman/core";
+import chalk from "chalk";
+import type { SyncPlan } from "./differ.js";
+import type { PaasmanYaml } from "./parser.js";
 
 export interface ExecuteResult {
-	appsCreated: number
-	appsUpdated: number
-	appsDeleted: number
-	dbsCreated: number
-	dbsDeleted: number
-	errors: string[]
+	appsCreated: number;
+	appsUpdated: number;
+	appsDeleted: number;
+	dbsCreated: number;
+	dbsDeleted: number;
+	errors: string[];
 }
 
 export async function executeSyncPlan(
@@ -26,20 +26,20 @@ export async function executeSyncPlan(
 		dbsCreated: 0,
 		dbsDeleted: 0,
 		errors: [],
-	}
+	};
 
 	// Create apps
 	for (const { name, config } of plan.apps.create) {
 		try {
-			let source: CreateAppInput['source']
-			if (config.source.type === 'git') {
+			let source: CreateAppInput["source"];
+			if (config.source.type === "git") {
 				source = {
-					type: 'git',
+					type: "git",
 					repository: config.source.repository,
 					branch: config.source.branch,
-				}
+				};
 			} else {
-				source = { type: 'image', image: config.source.image }
+				source = { type: "image", image: config.source.image };
 			}
 
 			const app = await pm.apps.create({
@@ -47,37 +47,37 @@ export async function executeSyncPlan(
 				source,
 				domains: config.domains,
 				env: config.env,
-			})
-			console.log(chalk.green(`  + Created app '${name}' (${app.id})`))
-			result.appsCreated++
+			});
+			console.log(chalk.green(`  + Created app '${name}' (${app.id})`));
+			result.appsCreated++;
 		} catch (err) {
-			const msg = `Failed to create app '${name}': ${err instanceof Error ? err.message : String(err)}`
-			console.error(chalk.red(`  ! ${msg}`))
-			result.errors.push(msg)
+			const msg = `Failed to create app '${name}': ${err instanceof Error ? err.message : String(err)}`;
+			console.error(chalk.red(`  ! ${msg}`));
+			result.errors.push(msg);
 		}
 	}
 
 	// Update apps (set env vars, domains are typically set at creation)
 	for (const { name } of plan.apps.update) {
 		try {
-			const apps = await pm.apps.list()
-			const app = apps.find((a) => a.name === name)
+			const apps = await pm.apps.list();
+			const app = apps.find((a) => a.name === name);
 			if (!app) {
-				result.errors.push(`App '${name}' not found for update`)
-				continue
+				result.errors.push(`App '${name}' not found for update`);
+				continue;
 			}
 
-			const desiredConfig = desired.apps[name]
+			const desiredConfig = desired.apps[name];
 			if (desiredConfig.env) {
-				await pm.env.set(app.id, desiredConfig.env)
+				await pm.env.set(app.id, desiredConfig.env);
 			}
 
-			console.log(chalk.yellow(`  ~ Updated app '${name}'`))
-			result.appsUpdated++
+			console.log(chalk.yellow(`  ~ Updated app '${name}'`));
+			result.appsUpdated++;
 		} catch (err) {
-			const msg = `Failed to update app '${name}': ${err instanceof Error ? err.message : String(err)}`
-			console.error(chalk.red(`  ! ${msg}`))
-			result.errors.push(msg)
+			const msg = `Failed to update app '${name}': ${err instanceof Error ? err.message : String(err)}`;
+			console.error(chalk.red(`  ! ${msg}`));
+			result.errors.push(msg);
 		}
 	}
 
@@ -85,17 +85,17 @@ export async function executeSyncPlan(
 	if (opts.prune) {
 		for (const name of plan.apps.orphaned) {
 			try {
-				const apps = await pm.apps.list()
-				const app = apps.find((a) => a.name === name)
+				const apps = await pm.apps.list();
+				const app = apps.find((a) => a.name === name);
 				if (app) {
-					await pm.apps.delete(app.id)
-					console.log(chalk.red(`  - Deleted app '${name}'`))
-					result.appsDeleted++
+					await pm.apps.delete(app.id);
+					console.log(chalk.red(`  - Deleted app '${name}'`));
+					result.appsDeleted++;
 				}
 			} catch (err) {
-				const msg = `Failed to delete app '${name}': ${err instanceof Error ? err.message : String(err)}`
-				console.error(chalk.red(`  ! ${msg}`))
-				result.errors.push(msg)
+				const msg = `Failed to delete app '${name}': ${err instanceof Error ? err.message : String(err)}`;
+				console.error(chalk.red(`  ! ${msg}`));
+				result.errors.push(msg);
 			}
 		}
 	}
@@ -104,19 +104,19 @@ export async function executeSyncPlan(
 	for (const { name, config } of plan.databases.create) {
 		try {
 			if (!pm.databases) {
-				throw new UnsupportedError('databases.create', pm.providerName)
+				throw new UnsupportedError("databases.create", pm.providerName);
 			}
 			const db = await pm.databases.create({
 				name,
 				engine: config.engine as DatabaseEngine,
 				version: config.version,
-			})
-			console.log(chalk.green(`  + Created database '${name}' (${db.id})`))
-			result.dbsCreated++
+			});
+			console.log(chalk.green(`  + Created database '${name}' (${db.id})`));
+			result.dbsCreated++;
 		} catch (err) {
-			const msg = `Failed to create database '${name}': ${err instanceof Error ? err.message : String(err)}`
-			console.error(chalk.red(`  ! ${msg}`))
-			result.errors.push(msg)
+			const msg = `Failed to create database '${name}': ${err instanceof Error ? err.message : String(err)}`;
+			console.error(chalk.red(`  ! ${msg}`));
+			result.errors.push(msg);
 		}
 	}
 
@@ -125,22 +125,22 @@ export async function executeSyncPlan(
 		for (const name of plan.databases.orphaned) {
 			try {
 				if (!pm.databases) {
-					throw new UnsupportedError('databases.delete', pm.providerName)
+					throw new UnsupportedError("databases.delete", pm.providerName);
 				}
-				const dbs = await pm.databases.list()
-				const db = dbs.find((d) => d.name === name)
+				const dbs = await pm.databases.list();
+				const db = dbs.find((d) => d.name === name);
 				if (db) {
-					await pm.databases.delete(db.id)
-					console.log(chalk.red(`  - Deleted database '${name}'`))
-					result.dbsDeleted++
+					await pm.databases.delete(db.id);
+					console.log(chalk.red(`  - Deleted database '${name}'`));
+					result.dbsDeleted++;
 				}
 			} catch (err) {
-				const msg = `Failed to delete database '${name}': ${err instanceof Error ? err.message : String(err)}`
-				console.error(chalk.red(`  ! ${msg}`))
-				result.errors.push(msg)
+				const msg = `Failed to delete database '${name}': ${err instanceof Error ? err.message : String(err)}`;
+				console.error(chalk.red(`  ! ${msg}`));
+				result.errors.push(msg);
 			}
 		}
 	}
 
-	return result
+	return result;
 }
