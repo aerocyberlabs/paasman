@@ -1,6 +1,6 @@
 {
 	"name": "@paasman/provider-dokku",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "Dokku provider for Paasman",
 	"type": "module",
 	"exports": {
@@ -13,7 +13,9 @@
 	"main": "./dist/index.cjs",
 	"module": "./dist/index.js",
 	"types": "./dist/index.d.ts",
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"scripts": {
 		"build": "tsup",
 		"test": "vitest run",
@@ -28,7 +30,7 @@
 		"vitest": "^4.1.0"
 	},
 	"peerDependencies": {
-		"@paasman/core": "^0.1.0"
+		"@paasman/core": "^0.2.0"
 	},
 	"license": "MIT",
 	"repository": {
@@ -41,5 +43,12 @@
 		"url": "https://github.com/aerocyberlabs/paasman/issues"
 	},
 	"author": "AeroCyberLabs",
-	"keywords": ["paasman", "paas", "self-hosted", "deployment", "devops", "dokku"]
+	"keywords": [
+		"paasman",
+		"paas",
+		"self-hosted",
+		"deployment",
+		"devops",
+		"dokku"
+	]
 }
