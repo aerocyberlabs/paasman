@@ -1,6 +1,6 @@
 {
 	"name": "@paasman/core",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Universal interface for self-hosted PaaS platforms",
 	"type": "module",
 	"exports": {
@@ -13,7 +13,9 @@
 	"main": "./dist/index.cjs",
 	"module": "./dist/index.js",
 	"types": "./dist/index.d.ts",
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"scripts": {
 		"build": "tsup",
 		"test": "vitest run",
@@ -37,5 +39,13 @@
 		"url": "https://github.com/aerocyberlabs/paasman/issues"
 	},
 	"author": "AeroCyberLabs",
-	"keywords": ["paasman", "paas", "self-hosted", "deployment", "devops", "sdk", "typescript"]
+	"keywords": [
+		"paasman",
+		"paas",
+		"self-hosted",
+		"deployment",
+		"devops",
+		"sdk",
+		"typescript"
+	]
 }

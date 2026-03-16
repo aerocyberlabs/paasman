@@ -1,12 +1,14 @@
 {
 	"name": "create-paasman-provider",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Scaffold a new Paasman provider project",
 	"type": "module",
 	"bin": {
 		"create-paasman-provider": "./dist/index.js"
 	},
-	"files": ["dist"],
+	"files": [
+		"dist"
+	],
 	"scripts": {
 		"build": "tsup",
 		"test": "vitest run",
@@ -30,5 +32,13 @@
 		"url": "https://github.com/aerocyberlabs/paasman/issues"
 	},
 	"author": "AeroCyberLabs",
-	"keywords": ["paasman", "paas", "self-hosted", "deployment", "devops", "scaffolding", "generator"]
+	"keywords": [
+		"paasman",
+		"paas",
+		"self-hosted",
+		"deployment",
+		"devops",
+		"scaffolding",
+		"generator"
+	]
 }
