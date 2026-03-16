@@ -11,6 +11,7 @@ import { dbCommand } from './commands/db.js'
 import { profileCommand } from './commands/profile.js'
 import { initCommand } from './commands/init.js'
 import { statusCommand } from './commands/status.js'
+import { syncCommand } from './commands/sync.js'
 import { handleError } from './error-handler.js'
 
 const program = new Command()
@@ -60,5 +61,33 @@ program.addCommand(dbCommand(getPaasman))
 program.addCommand(profileCommand())
 program.addCommand(initCommand())
 program.addCommand(statusCommand())
+program.addCommand(syncCommand(async (profileOverride?: string) => {
+	const configPath = join(homedir(), '.paasman', 'config.yaml')
+	const config = loadConfig(configPath)
+
+	const profileName = profileOverride ?? program.opts().profile ?? config.default
+	const profile = config.profiles[profileName]
+
+	if (!profile) {
+		throw new Error(`Profile '${profileName}' not found`)
+	}
+
+	const providerModule = await import(`@paasman/provider-${profile.provider}`)
+	const ProviderClass =
+		providerModule.default ?? providerModule[`${profile.provider.charAt(0).toUpperCase()}${profile.provider.slice(1)}Provider`] ?? Object.values(providerModule)[0]
+
+	if (!ProviderClass || typeof ProviderClass !== 'function') {
+		throw new Error(
+			`Provider '${profile.provider}' not found. Install @paasman/provider-${profile.provider}`,
+		)
+	}
+
+	const provider = new (ProviderClass as new (config: { baseUrl: string; token: string }) => import('@paasman/core').PaasProvider)({
+		baseUrl: profile.url,
+		token: profile.token,
+	})
+
+	return new Paasman({ provider })
+}))
 
 program.parseAsync(process.argv).catch(handleError)
