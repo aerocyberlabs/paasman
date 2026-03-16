@@ -6,6 +6,7 @@ import { UnsupportedError } from '@paasman/core'
 import { formatAppsTable, formatAllProfilesAppsTable, formatJson, type AllProfilesAppRow } from '../formatters.js'
 import { loadConfig } from '../config.js'
 import { createProvider } from './status.js'
+import { getWebhookManager } from '../webhooks.js'
 
 export function appsCommand(getPaasman: () => Promise<Paasman>): Command {
 	const cmd = new Command('apps').description('Manage applications')
@@ -134,6 +135,17 @@ export function appsCommand(getPaasman: () => Promise<Paasman>): Command {
 			const pm = await getPaasman()
 			const deployment = await pm.apps.deploy(id, { force: opts.force })
 			console.log(`Deployment triggered: ${deployment.id}`)
+
+			const webhooks = getWebhookManager()
+			if (webhooks) {
+				await webhooks.notify({
+					event: 'deploy',
+					profile: pm.providerName,
+					provider: pm.providerName,
+					app: { id, name: id },
+					deployment: { id: deployment.id, status: 'triggered' },
+				})
+			}
 		})
 
 	cmd
@@ -146,6 +158,16 @@ export function appsCommand(getPaasman: () => Promise<Paasman>): Command {
 			}
 			await pm.apps.stop!(id)
 			console.log(`Application ${id} stopped`)
+
+			const webhooks = getWebhookManager()
+			if (webhooks) {
+				await webhooks.notify({
+					event: 'stop',
+					profile: pm.providerName,
+					provider: pm.providerName,
+					app: { id, name: id },
+				})
+			}
 		})
 
 	cmd
@@ -158,6 +180,16 @@ export function appsCommand(getPaasman: () => Promise<Paasman>): Command {
 			}
 			await pm.apps.restart!(id)
 			console.log(`Application ${id} restarted`)
+
+			const webhooks = getWebhookManager()
+			if (webhooks) {
+				await webhooks.notify({
+					event: 'restart',
+					profile: pm.providerName,
+					provider: pm.providerName,
+					app: { id, name: id },
+				})
+			}
 		})
 
 	cmd
