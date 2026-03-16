@@ -21,12 +21,13 @@ export function initCommand(): Command {
 				],
 			})
 			const url = await input({ message: 'Server URL (e.g., https://coolify.example.com)' })
-			const token = await input({ message: 'API token' })
+			const { password } = await import('@inquirer/prompts')
+			const token = await password({ message: 'API token', mask: '*' })
 
 			const configDir = join(homedir(), '.paasman')
 			const configPath = join(configDir, 'config.yaml')
 
-			mkdirSync(configDir, { recursive: true })
+			mkdirSync(configDir, { recursive: true, mode: 0o700 })
 
 			const config = {
 				profiles: {
@@ -35,7 +36,7 @@ export function initCommand(): Command {
 				default: profileName,
 			}
 
-			writeFileSync(configPath, stringify(config))
+			writeFileSync(configPath, stringify(config), { mode: 0o600 })
 			console.log(`Configuration saved to ${configPath}`)
 			console.log(
 				`\nTip: For security, replace the token in config.yaml with \${ENV_VAR_NAME}`,

@@ -137,7 +137,7 @@ describe('DokkuProvider', () => {
       source: { type: 'git', repository: 'https://github.com/test/repo' },
       env: { PORT: '3000' },
     })
-    expect(mockRun).toHaveBeenCalledWith('config:set new-app PORT=3000')
+    expect(mockRun).toHaveBeenCalledWith("config:set new-app PORT='3000'")
   })
 
   it('apps.create adds domains if provided', async () => {
@@ -220,7 +220,7 @@ describe('DokkuProvider', () => {
 
   it('env.set calls config:set with key=value pairs', async () => {
     await provider.env.set('my-app', { DB_HOST: 'localhost', DB_PORT: '5432' })
-    expect(mockRun).toHaveBeenCalledWith('config:set my-app DB_HOST=localhost DB_PORT=5432')
+    expect(mockRun).toHaveBeenCalledWith("config:set my-app DB_HOST='localhost' DB_PORT='5432'")
   })
 
   it('env.set escapes values with spaces', async () => {
@@ -248,9 +248,8 @@ describe('DokkuProvider', () => {
     await provider.env.push('my-app', { NEW_VAR: 'new' })
 
     expect(mockRun).toHaveBeenCalledWith('config:export my-app')
-    expect(mockRun).toHaveBeenCalledWith('config:unset my-app OLD_VAR')
-    expect(mockRun).toHaveBeenCalledWith('config:unset my-app OTHER_VAR')
-    expect(mockRun).toHaveBeenCalledWith('config:set my-app NEW_VAR=new')
+    expect(mockRun).toHaveBeenCalledWith('config:unset --no-restart my-app OLD_VAR OTHER_VAR')
+    expect(mockRun).toHaveBeenCalledWith("config:set my-app NEW_VAR='new'")
   })
 
   it('env.push with empty vars only unsets existing', async () => {
@@ -258,7 +257,7 @@ describe('DokkuProvider', () => {
 
     await provider.env.push('my-app', {})
 
-    expect(mockRun).toHaveBeenCalledWith('config:unset my-app OLD_VAR')
+    expect(mockRun).toHaveBeenCalledWith('config:unset --no-restart my-app OLD_VAR')
     // Should NOT have called config:set
     expect(mockRun).not.toHaveBeenCalledWith(expect.stringContaining('config:set'))
   })
@@ -319,6 +318,6 @@ describe('DokkuProvider', () => {
   it('databases.delete throws if not found in any engine', async () => {
     mockRun.mockRejectedValue(new Error('not found'))
 
-    await expect(provider.databases!.delete('nonexistent')).rejects.toThrow("Database 'nonexistent' not found")
+    await expect(provider.databases!.delete('nonexistent')).rejects.toThrow("database 'nonexistent' not found")
   })
 })

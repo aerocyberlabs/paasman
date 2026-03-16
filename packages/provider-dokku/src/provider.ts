@@ -4,7 +4,7 @@ import type {
   DeployOpts, Deployment, LogOpts, LogLine, EnvVar, Database,
   CreateDatabaseInput,
 } from '@paasman/core'
-import { UnsupportedError } from '@paasman/core'
+import { UnsupportedError, NotFoundError, ValidationError } from '@paasman/core'
 import { DokkuSshClient } from './ssh-client.js'
 import type { DokkuSshConfig } from './ssh-client.js'
 import {
@@ -22,6 +22,27 @@ export interface DokkuProviderConfig {
 }
 
 const SUPPORTED_DB_ENGINES = ['postgres', 'mysql', 'redis', 'mongo', 'mariadb'] as const
+
+function validateDokkuName(name: string, label: string): string {
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(name)) {
+    throw new ValidationError(`Invalid ${label}: '${name}'. Only lowercase letters, digits, and hyphens allowed.`)
+  }
+  return name
+}
+
+function validateEnvKey(key: string): string {
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) {
+    throw new ValidationError(`Invalid env key: '${key}'. Only letters, digits, and underscores allowed.`)
+  }
+  return key
+}
+
+function validateDomain(domain: string): string {
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9.-]*\.[a-zA-Z]{2,}$/.test(domain)) {
+    throw new ValidationError(`Invalid domain: '${domain}'.`)
+  }
+  return domain
+}
 
 export class DokkuProvider implements PaasProvider {
   readonly name = 'dokku'
@@ -103,27 +124,30 @@ export class DokkuProvider implements PaasProvider {
     },
 
     create: async (input: CreateAppInput): Promise<App> => {
-      await this.sshClient.run(`apps:create ${input.name}`)
+      const name = validateDokkuName(input.name, 'app name')
+      await this.sshClient.run(`apps:create ${name}`)
 
       if (input.env && Object.keys(input.env).length > 0) {
-        await this.env.set(input.name, input.env)
+        await this.env.set(name, input.env)
       }
 
       if (input.domains && input.domains.length > 0) {
         for (const domain of input.domains) {
-          await this.sshClient.run(`domains:add ${input.name} ${domain}`)
+          await this.sshClient.run(`domains:add ${name} ${validateDomain(domain)}`)
         }
       }
 
-      return this.apps.get(input.name)
+      return this.apps.get(name)
     },
 
     delete: async (id: string): Promise<void> => {
-      await this.sshClient.run(`apps:destroy ${id} --force`)
+      const name = validateDokkuName(id, 'app name')
+      await this.sshClient.run(`apps:destroy ${name} --force`)
     },
 
     deploy: async (id: string, _opts?: DeployOpts): Promise<Deployment> => {
-      await this.sshClient.run(`ps:rebuild ${id}`)
+      const name = validateDokkuName(id, 'app name')
+      await this.sshClient.run(`ps:rebuild ${name}`)
       return {
         id: `${id}-rebuild-${Date.now()}`,
         appId: id,
@@ -137,15 +161,15 @@ export class DokkuProvider implements PaasProvider {
     },
 
     start: async (id: string): Promise<void> => {
-      await this.sshClient.run(`ps:start ${id}`)
+      await this.sshClient.run(`ps:start ${validateDokkuName(id, 'app name')}`)
     },
 
     stop: async (id: string): Promise<void> => {
-      await this.sshClient.run(`ps:stop ${id}`)
+      await this.sshClient.run(`ps:stop ${validateDokkuName(id, 'app name')}`)
     },
 
     restart: async (id: string): Promise<void> => {
-      await this.sshClient.run(`ps:restart ${id}`)
+      await this.sshClient.run(`ps:restart ${validateDokkuName(id, 'app name')}`)
     },
 
     logs: (id: string, opts?: LogOpts) => this.getLogs(id, opts),
@@ -153,40 +177,43 @@ export class DokkuProvider implements PaasProvider {
 
   env: EnvOperations = {
     list: async (appId: string): Promise<EnvVar[]> => {
-      const output = await this.sshClient.run(`config:show ${appId}`)
+      const name = validateDokkuName(appId, 'app name')
+      const output = await this.sshClient.run(`config:show ${name}`)
       const parsed = parseConfigShow(output)
       return Object.entries(parsed).map(([key, value]) => toEnvVar(key, value))
     },
 
     set: async (appId: string, vars: Record<string, string>): Promise<void> => {
+      const name = validateDokkuName(appId, 'app name')
       const pairs = Object.entries(vars)
-        .map(([key, value]) => `${key}=${escapeShellValue(value)}`)
+        .map(([key, value]) => `${validateEnvKey(key)}=${escapeShellValue(value)}`)
         .join(' ')
-      await this.sshClient.run(`config:set ${appId} ${pairs}`)
+      await this.sshClient.run(`config:set ${name} ${pairs}`)
     },
 
     delete: async (appId: string, key: string): Promise<void> => {
-      await this.sshClient.run(`config:unset ${appId} ${key}`)
+      await this.sshClient.run(`config:unset ${validateDokkuName(appId, 'app name')} ${validateEnvKey(key)}`)
     },
 
     pull: async (appId: string): Promise<Record<string, string>> => {
-      const output = await this.sshClient.run(`config:export ${appId}`)
+      const output = await this.sshClient.run(`config:export ${validateDokkuName(appId, 'app name')}`)
       return parseConfigExport(output)
     },
 
     push: async (appId: string, vars: Record<string, string>): Promise<void> => {
-      // Full replace: get current config, unset all keys, then set new ones
-      const current = await this.env.pull(appId)
+      const name = validateDokkuName(appId, 'app name')
+      const current = await this.env.pull(name)
       const currentKeys = Object.keys(current)
 
-      // Unset all existing keys
-      for (const key of currentKeys) {
-        await this.sshClient.run(`config:unset ${appId} ${key}`)
+      // Unset all existing keys without restarting
+      if (currentKeys.length > 0) {
+        const keysStr = currentKeys.map(k => validateEnvKey(k)).join(' ')
+        await this.sshClient.run(`config:unset --no-restart ${name} ${keysStr}`)
       }
 
-      // Set new vars (if any)
+      // Set new vars (triggers single restart)
       if (Object.keys(vars).length > 0) {
-        await this.env.set(appId, vars)
+        await this.env.set(name, vars)
       }
     },
   }
@@ -218,40 +245,41 @@ export class DokkuProvider implements PaasProvider {
     },
 
     get: async (id: string): Promise<Database> => {
-      // Try each engine to find the database
+      const name = validateDokkuName(id, 'database name')
       for (const engine of SUPPORTED_DB_ENGINES) {
         try {
-          const output = await this.sshClient.run(`${engine}:info ${id}`)
+          const output = await this.sshClient.run(`${engine}:info ${name}`)
           const info = parseDatabaseInfo(output)
-          return toDatabase(id, engine, info)
+          return toDatabase(name, engine, info)
         } catch {
           // Not this engine, try next
         }
       }
-      throw new Error(`Database '${id}' not found`)
+      throw new NotFoundError('database', id, 'dokku')
     },
 
     create: async (input: CreateDatabaseInput): Promise<Database> => {
+      const name = validateDokkuName(input.name, 'database name')
       const engineCmd = mapEngineToCommand(input.engine)
-      await this.sshClient.run(`${engineCmd}:create ${input.name}`)
+      await this.sshClient.run(`${engineCmd}:create ${name}`)
 
-      const infoOutput = await this.sshClient.run(`${engineCmd}:info ${input.name}`)
+      const infoOutput = await this.sshClient.run(`${engineCmd}:info ${name}`)
       const info = parseDatabaseInfo(infoOutput)
-      return toDatabase(input.name, engineCmd, info)
+      return toDatabase(name, engineCmd, info)
     },
 
     delete: async (id: string): Promise<void> => {
-      // Try each engine to find and delete the database
+      const name = validateDokkuName(id, 'database name')
       for (const engine of SUPPORTED_DB_ENGINES) {
         try {
-          await this.sshClient.run(`${engine}:info ${id}`)
-          await this.sshClient.run(`${engine}:destroy ${id} --force`)
+          await this.sshClient.run(`${engine}:info ${name}`)
+          await this.sshClient.run(`${engine}:destroy ${name} --force`)
           return
         } catch {
           // Not this engine, try next
         }
       }
-      throw new Error(`Database '${id}' not found`)
+      throw new NotFoundError('database', id, 'dokku')
     },
   }
 
@@ -273,12 +301,6 @@ function mapEngineToCommand(engine: string): string {
 }
 
 function escapeShellValue(value: string): string {
-  // Wrap in single quotes and escape any single quotes within
-  if (value.includes("'")) {
-    return `'${value.replace(/'/g, "'\\''")}'`
-  }
-  if (value.includes(' ') || value.includes('"') || value.includes('$') || value.includes('\\')) {
-    return `'${value}'`
-  }
-  return value
+  // Always wrap in single quotes and escape any single quotes within
+  return `'${value.replace(/'/g, "'\\''")}'`
 }

@@ -70,6 +70,9 @@ export class CapRoverClient {
     }
 
     if (res.ok) {
+      if (res.status === 204) {
+        return undefined as T
+      }
       const json = await res.json() as CapRoverResponse<T>
       return json.data
     }

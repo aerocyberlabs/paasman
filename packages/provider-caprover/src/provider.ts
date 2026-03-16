@@ -3,6 +3,7 @@ import type {
   ServerOperations, ProviderConfig, HealthStatus, App, CreateAppInput,
   DeployOpts, Deployment, EnvVar, Server,
 } from '@paasman/core'
+import { NotFoundError } from '@paasman/core'
 import { CapRoverClient } from './client.js'
 import { toApp, toServer, toEnvVar } from './normalizers.js'
 
@@ -70,7 +71,7 @@ export class CapRoverProvider implements PaasProvider {
       )
       const app = data.appDefinitions.find((a) => a.appName === id)
       if (!app) {
-        throw new Error(`App '${id}' not found`)
+        throw new NotFoundError('application', id, 'caprover')
       }
       return toApp(app)
     },
@@ -184,7 +185,7 @@ export class CapRoverProvider implements PaasProvider {
       )
       const node = data.find((n) => (n.nodeId ?? n.hostname) === id)
       if (!node) {
-        throw new Error(`Server '${id}' not found`)
+        throw new NotFoundError('server', id, 'caprover')
       }
       return toServer(node)
     },

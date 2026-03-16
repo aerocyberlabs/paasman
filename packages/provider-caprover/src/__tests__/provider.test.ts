@@ -115,7 +115,7 @@ describe('CapRoverProvider', () => {
   it('apps.get throws when app not found', async () => {
     mockClient.get.mockResolvedValueOnce({ appDefinitions: [] })
 
-    await expect(provider.apps.get('nonexistent')).rejects.toThrow("App 'nonexistent' not found")
+    await expect(provider.apps.get('nonexistent')).rejects.toThrow("application 'nonexistent' not found")
   })
 
   it('apps.create registers app and returns it', async () => {
@@ -326,7 +326,7 @@ describe('CapRoverProvider', () => {
   it('servers.get throws when server not found', async () => {
     mockClient.get.mockResolvedValueOnce([])
 
-    await expect(provider.servers!.get('nonexistent')).rejects.toThrow("Server 'nonexistent' not found")
+    await expect(provider.servers!.get('nonexistent')).rejects.toThrow("server 'nonexistent' not found")
   })
 
   // --- Health check ---

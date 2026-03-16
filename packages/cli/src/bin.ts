@@ -2,7 +2,9 @@ import { Command } from 'commander'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 import { Paasman } from '@paasman/core'
+import type { PaasProvider } from '@paasman/core'
 import { loadConfig } from './config.js'
+import type { ProfileConfig } from './config.js'
 import { appsCommand } from './commands/apps.js'
 import { envCommand } from './commands/env.js'
 import { serversCommand } from './commands/servers.js'
@@ -15,6 +17,8 @@ import { syncCommand } from './commands/sync.js'
 import { migrateCommand } from './commands/migrate.js'
 import { handleError } from './error-handler.js'
 
+const VALID_PROVIDERS = ['coolify', 'dokploy', 'caprover', 'dokku'] as const
+
 const program = new Command()
 	.name('paasman')
 	.description('Universal CLI for self-hosted PaaS platforms')
@@ -22,20 +26,28 @@ const program = new Command()
 	.option('--profile <name>', 'Use a specific profile')
 	.option('--json', 'Output as JSON')
 
-async function getPaasman(): Promise<Paasman> {
-	const configPath = join(homedir(), '.paasman', 'config.yaml')
-	const config = loadConfig(configPath)
+function mapProfileToProviderConfig(profile: ProfileConfig): Record<string, unknown> {
+	switch (profile.provider) {
+		case 'caprover':
+			return { baseUrl: profile.url, password: profile.token }
+		case 'dokku':
+			return {
+				host: profile.url.replace(/^https?:\/\//, ''),
+				privateKeyPath: profile.token,
+			}
+		default:
+			return { baseUrl: profile.url, token: profile.token }
+	}
+}
 
-	const profileName = program.opts().profile ?? config.default
-	const profile = config.profiles[profileName]
-
-	if (!profile) {
-		throw new Error(`Profile '${profileName}' not found`)
+async function loadProvider(profile: ProfileConfig): Promise<PaasProvider> {
+	if (!VALID_PROVIDERS.includes(profile.provider as typeof VALID_PROVIDERS[number])) {
+		throw new Error(`Unknown provider '${profile.provider}'. Valid providers: ${VALID_PROVIDERS.join(', ')}`)
 	}
 
 	const providerModule = await import(`@paasman/provider-${profile.provider}`)
 	const ProviderClass =
-		providerModule.default ?? providerModule[`${profile.provider.charAt(0).toUpperCase()}${profile.provider.slice(1)}Provider`] ?? Object.values(providerModule)[0]
+		providerModule.default ?? providerModule[`${profile.provider.charAt(0).toUpperCase()}${profile.provider.slice(1)}Provider`] ?? Object.values(providerModule).find(v => typeof v === 'function')
 
 	if (!ProviderClass || typeof ProviderClass !== 'function') {
 		throw new Error(
@@ -43,24 +55,11 @@ async function getPaasman(): Promise<Paasman> {
 		)
 	}
 
-	const provider = new (ProviderClass as new (config: { baseUrl: string; token: string }) => import('@paasman/core').PaasProvider)({
-		baseUrl: profile.url,
-		token: profile.token,
-	})
-
-	return new Paasman({ provider })
+	const config = mapProfileToProviderConfig(profile)
+	return new (ProviderClass as new (config: Record<string, unknown>) => PaasProvider)(config)
 }
 
-program.addCommand(appsCommand(getPaasman))
-program.addCommand(envCommand(getPaasman))
-program.addCommand(serversCommand(getPaasman))
-program.addCommand(deploysCommand(getPaasman))
-program.addCommand(dbCommand(getPaasman))
-program.addCommand(profileCommand())
-program.addCommand(initCommand())
-program.addCommand(statusCommand())
-program.addCommand(migrateCommand())
-program.addCommand(syncCommand(async (profileOverride?: string) => {
+async function getPaasman(profileOverride?: string): Promise<Paasman> {
 	const configPath = join(homedir(), '.paasman', 'config.yaml')
 	const config = loadConfig(configPath)
 
@@ -71,22 +70,19 @@ program.addCommand(syncCommand(async (profileOverride?: string) => {
 		throw new Error(`Profile '${profileName}' not found`)
 	}
 
-	const providerModule = await import(`@paasman/provider-${profile.provider}`)
-	const ProviderClass =
-		providerModule.default ?? providerModule[`${profile.provider.charAt(0).toUpperCase()}${profile.provider.slice(1)}Provider`] ?? Object.values(providerModule)[0]
-
-	if (!ProviderClass || typeof ProviderClass !== 'function') {
-		throw new Error(
-			`Provider '${profile.provider}' not found. Install @paasman/provider-${profile.provider}`,
-		)
-	}
-
-	const provider = new (ProviderClass as new (config: { baseUrl: string; token: string }) => import('@paasman/core').PaasProvider)({
-		baseUrl: profile.url,
-		token: profile.token,
-	})
-
+	const provider = await loadProvider(profile)
 	return new Paasman({ provider })
-}))
+}
+
+program.addCommand(appsCommand(() => getPaasman()))
+program.addCommand(envCommand(() => getPaasman()))
+program.addCommand(serversCommand(() => getPaasman()))
+program.addCommand(deploysCommand(() => getPaasman()))
+program.addCommand(dbCommand(() => getPaasman()))
+program.addCommand(profileCommand())
+program.addCommand(initCommand())
+program.addCommand(statusCommand())
+program.addCommand(migrateCommand())
+program.addCommand(syncCommand((profileOverride) => getPaasman(profileOverride)))
 
 program.parseAsync(process.argv).catch(handleError)

@@ -34,7 +34,7 @@ export function profileCommand(): Command {
 				process.exit(1)
 			}
 			raw.default = name
-			writeFileSync(configPath, stringify(raw))
+			writeFileSync(configPath, stringify(raw), { mode: 0o600 })
 			console.log(`Default profile set to '${name}'`)
 		})
 

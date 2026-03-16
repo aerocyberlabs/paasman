@@ -45,7 +45,11 @@ export function parseEnvFile(content: string): Record<string, string> {
 		const trimmed = line.trim()
 		if (!trimmed || trimmed.startsWith('#')) continue
 		const [key, ...rest] = trimmed.split('=')
-		vars[key] = rest.join('=')
+		let value = rest.join('=')
+		if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+			value = value.slice(1, -1)
+		}
+		vars[key] = value
 	}
 	return vars
 }
@@ -144,7 +148,11 @@ export function envCommand(getPaasman: () => Promise<Paasman>): Command {
 				const trimmed = line.trim()
 				if (!trimmed || trimmed.startsWith('#')) continue
 				const [key, ...rest] = trimmed.split('=')
-				vars[key] = rest.join('=')
+				let value = rest.join('=')
+				if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+					value = value.slice(1, -1)
+				}
+				vars[key] = value
 			}
 			await pm.env.push(appId, vars)
 			console.log(`Pushed ${Object.keys(vars).length} variable(s) from ${opts.file}`)

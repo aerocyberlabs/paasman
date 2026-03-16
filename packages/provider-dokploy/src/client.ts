@@ -26,6 +26,9 @@ export class DokployClient {
     }
 
     if (res.ok) {
+      if (res.status === 204) {
+        return undefined as T
+      }
       return res.json() as Promise<T>
     }
 
