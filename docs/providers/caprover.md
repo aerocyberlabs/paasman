@@ -2,69 +2,89 @@
 
 [CapRover](https://caprover.com) is a free and open-source PaaS that makes deploying web apps and databases easy using Docker and Nginx.
 
-::: warning Status: Planned
-The CapRover provider is not yet implemented. This page documents the planned integration.
-:::
-
-## Planned Installation
+## Installation
 
 ```bash
-npm install -g @paasman/provider-caprover
+npm install @paasman/provider-caprover @paasman/core
 ```
 
-## Planned Configuration
+## Configuration
 
 ```yaml
 profiles:
   caprover:
     provider: caprover
     url: https://captain.example.com
-    token: ${CAPROVER_TOKEN}
+    token: ${CAPROVER_PASSWORD}
 default: caprover
 ```
 
-### Getting Your API Token
+::: tip Authentication
+CapRover uses password-based login. The `token` field in your config should contain your CapRover dashboard password. Paasman handles the login flow automatically and caches the session token.
+:::
+
+### Getting Your Credentials
 
 1. Log in to your CapRover dashboard
-2. The API token is typically your CapRover password or a token retrieved via the login endpoint
+2. Your API password is the same as your dashboard password
 3. Store it in an environment variable:
 
 ```bash
-export CAPROVER_TOKEN="your-token-here"
+export CAPROVER_PASSWORD="your-dashboard-password"
 ```
 
-## Planned Capabilities
+## Capabilities
 
-| Capability | Planned |
-|------------|:-------:|
+| Capability | Supported |
+|------------|:---------:|
 | `apps.list` | Yes |
 | `apps.get` | Yes |
 | `apps.create` | Yes |
 | `apps.delete` | Yes |
 | `apps.deploy` | Yes |
-| `apps.start` | Yes |
-| `apps.stop` | Yes |
-| `apps.restart` | Yes |
-| `apps.logs` | Yes |
+| `apps.start` | No |
+| `apps.stop` | No |
+| `apps.restart` | No |
+| `apps.logs` | No |
 | `env.list` | Yes |
 | `env.set` | Yes |
 | `env.delete` | Yes |
 | `env.pull` | Yes |
 | `env.push` | Yes |
-| `servers` | No (single-server architecture) |
-| `databases` | Possible |
-| `deployments.list` | Possible |
-| `deployments.cancel` | Possible |
+| `servers.list` | Yes (cluster nodes) |
+| `servers.get` | Yes |
+| `databases` | No (deploy as one-click apps) |
+| `deployments` | No |
 
-## CapRover API
+::: info Limited Lifecycle Control
+CapRover does not expose discrete start/stop/restart APIs. Apps are managed via deploy/undeploy. Log streaming is also not available through the API.
+:::
 
-CapRover exposes a REST API at `/api/v2/`. Key endpoints include:
+## SDK Usage
 
-- `POST /api/v2/login` -- authenticate and receive a token
-- `GET /api/v2/user/apps/appDefinitions` -- list all apps
-- `POST /api/v2/user/apps/appData/<appName>` -- deploy an app
-- `POST /api/v2/user/apps/appDefinitions/update` -- update app settings (including env vars)
+```typescript
+import { Paasman } from '@paasman/core'
+import { CapRoverProvider } from '@paasman/provider-caprover'
 
-## Contributing
+const pm = new Paasman({
+  provider: new CapRoverProvider({
+    baseUrl: 'https://captain.example.com',
+    password: 'your-password',
+  })
+})
 
-Want to help implement the CapRover provider? See [Creating a Provider](/contributing/creating-a-provider) for guidance, and check the existing `provider-coolify` package as a reference.
+const apps = await pm.apps.list()
+await pm.apps.deploy('my-app')
+```
+
+## API Mapping
+
+| Paasman Operation | CapRover API |
+|-------------------|-------------|
+| `apps.list` | `GET /api/v2/user/apps/appDefinitions` |
+| `apps.create` | `POST /api/v2/user/apps/appDefinitions/register` |
+| `apps.delete` | `POST /api/v2/user/apps/appDefinitions/delete` |
+| `apps.deploy` | `POST /api/v2/user/apps/appDefinitions/deploy` |
+| `env.set` | `POST /api/v2/user/apps/appDefinitions/update` (merge) |
+| `env.push` | `POST /api/v2/user/apps/appDefinitions/update` (replace) |
+| `servers.list` | `GET /api/v2/user/system/nodes` |

@@ -20,8 +20,8 @@ This means the CLI itself has zero knowledge of any specific PaaS platform. All 
 |----------|---------|:----:|:-------:|:---------:|:-----------:|:----:|
 | [Coolify](/providers/coolify) | `@paasman/provider-coolify` | Yes | Yes | Yes | Yes | Yes |
 | [Dokploy](/providers/dokploy) | `@paasman/provider-dokploy` | Yes | Yes | Yes | Yes | Yes |
-| [CapRover](/providers/caprover) | `@paasman/provider-caprover` | Planned | -- | -- | -- | -- |
-| [Dokku](/providers/dokku) | `@paasman/provider-dokku` | Planned | -- | -- | -- | -- |
+| [CapRover](/providers/caprover) | `@paasman/provider-caprover` | Yes | Yes | No | No | No |
+| [Dokku](/providers/dokku) | `@paasman/provider-dokku` | Yes | No | Yes | No | Yes |
 
 ## Installing a Provider
 

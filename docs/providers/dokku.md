@@ -2,17 +2,13 @@
 
 [Dokku](https://dokku.com) is an open-source, Docker-powered PaaS that implements a Heroku-like workflow via SSH and Git.
 
-::: warning Status: Planned
-The Dokku provider is not yet implemented. This page documents the planned integration.
-:::
-
-## Planned Installation
+## Installation
 
 ```bash
-npm install -g @paasman/provider-dokku
+npm install @paasman/provider-dokku @paasman/core
 ```
 
-## Planned Configuration
+## Configuration
 
 Dokku uses SSH instead of an HTTP API, so the configuration differs from other providers:
 
@@ -20,74 +16,98 @@ Dokku uses SSH instead of an HTTP API, so the configuration differs from other p
 profiles:
   dokku:
     provider: dokku
-    url: ssh://dokku@example.com:22
-    token: unused
+    url: dokku.example.com
+    token: ~/.ssh/id_rsa
 default: dokku
 ```
 
-::: tip
-Dokku authenticates via SSH keys rather than API tokens. Ensure your SSH key is added to the Dokku server (`dokku ssh-keys:add`).
+::: tip SSH Authentication
+The `url` field is the hostname (no `https://`). The `token` field is the path to your SSH private key. Ensure your public key is added to the Dokku server with `dokku ssh-keys:add`.
 :::
 
-## Planned Capabilities
+## Capabilities
 
-| Capability | Planned |
-|------------|:-------:|
+| Capability | Supported |
+|------------|:---------:|
 | `apps.list` | Yes |
 | `apps.get` | Yes |
 | `apps.create` | Yes |
 | `apps.delete` | Yes |
-| `apps.deploy` | Partial (Git push based) |
+| `apps.deploy` | Yes (via `ps:rebuild`) |
 | `apps.start` | Yes |
 | `apps.stop` | Yes |
 | `apps.restart` | Yes |
 | `apps.logs` | Yes |
 | `env.list` | Yes |
-| `env.set` | Yes |
+| `env.set` | Yes (additive) |
 | `env.delete` | Yes |
 | `env.pull` | Yes |
-| `env.push` | Yes |
+| `env.push` | Yes (full replace with `--no-restart` batch) |
 | `servers` | No (single-server architecture) |
-| `databases` | Yes (via plugins) |
-| `deployments.list` | No |
-| `deployments.cancel` | No |
+| `databases.list` | Yes (via plugins) |
+| `databases.create` | Yes |
+| `databases.delete` | Yes |
+| `deployments` | No (git-push based, no tracking) |
 
-## How Dokku Differs
+## SDK Usage
 
-Unlike other providers that use HTTP APIs, Dokku operations are performed by executing commands over SSH:
+```typescript
+import { Paasman } from '@paasman/core'
+import { DokkuProvider } from '@paasman/provider-dokku'
+
+const pm = new Paasman({
+  provider: new DokkuProvider({
+    host: 'dokku.example.com',
+    privateKeyPath: '~/.ssh/id_rsa',
+  })
+})
+
+const apps = await pm.apps.list()
+await pm.apps.deploy('my-app')  // triggers ps:rebuild
+```
+
+## How It Works
+
+Unlike other providers that use HTTP APIs, all Dokku operations are performed by executing commands over SSH:
 
 ```bash
-# These are the underlying Dokku commands that the provider would translate to
+# The provider translates Paasman operations to these SSH commands
 ssh dokku@example.com apps:list
 ssh dokku@example.com apps:create my-app
 ssh dokku@example.com config:show my-app
-ssh dokku@example.com config:set my-app KEY=value
+ssh dokku@example.com config:set my-app KEY='value'
+ssh dokku@example.com ps:rebuild my-app
 ```
 
-The Paasman Dokku provider would use the `SshProviderConfig` connection type from `@paasman/core`:
+## Command Mapping
 
-```typescript
-import type { ProviderConfig } from '@paasman/core'
-
-const config: ProviderConfig = {
-  type: 'ssh',
-  host: 'example.com',
-  port: 22,
-  username: 'dokku',
-}
-```
+| Paasman Operation | Dokku Command |
+|-------------------|---------------|
+| `apps.list` | `apps:list` + `apps:report` per app |
+| `apps.create` | `apps:create <name>` |
+| `apps.delete` | `apps:destroy <name> --force` |
+| `apps.deploy` | `ps:rebuild <name>` |
+| `apps.start/stop/restart` | `ps:start/stop/restart <name>` |
+| `apps.logs` | `logs <name> -n <lines>` |
+| `env.list` | `config:show <name>` |
+| `env.set` | `config:set <name> KEY='value'` |
+| `env.delete` | `config:unset <name> KEY` |
+| `env.push` | `config:unset --no-restart` + `config:set` |
+| `databases.list` | `postgres:list`, `mysql:list`, etc. |
+| `databases.create` | `postgres:create <name>`, etc. |
 
 ## Database Support
 
-Dokku supports databases through community plugins:
+Dokku supports databases through official plugins. The provider automatically detects installed plugins and maps them:
 
-- `dokku-postgres` -- PostgreSQL
-- `dokku-mysql` -- MySQL
-- `dokku-redis` -- Redis
-- `dokku-mongo` -- MongoDB
+| Plugin | Engine |
+|--------|--------|
+| `dokku-postgres` | `postgresql` |
+| `dokku-mysql` | `mysql` |
+| `dokku-mariadb` | `mariadb` |
+| `dokku-mongo` | `mongodb` |
+| `dokku-redis` | `redis` |
 
-The provider would map these plugin commands to the Paasman `DatabaseOperations` interface.
+## Security
 
-## Contributing
-
-Want to help implement the Dokku provider? See [Creating a Provider](/contributing/creating-a-provider) for guidance. The Dokku provider is an especially interesting case because it uses SSH rather than HTTP.
+All user inputs (app names, database names, env keys) are validated against strict regex patterns before being interpolated into SSH commands. Env values are always single-quoted to prevent shell injection. SSH host key verification is enabled by default.
