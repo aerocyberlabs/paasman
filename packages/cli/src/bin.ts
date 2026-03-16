@@ -12,6 +12,7 @@ import { profileCommand } from './commands/profile.js'
 import { initCommand } from './commands/init.js'
 import { statusCommand } from './commands/status.js'
 import { syncCommand } from './commands/sync.js'
+import { migrateCommand } from './commands/migrate.js'
 import { handleError } from './error-handler.js'
 
 const program = new Command()
@@ -21,7 +22,6 @@ const program = new Command()
 	.option('--profile <name>', 'Use a specific profile')
 	.option('--json', 'Output as JSON')
 
-// Task 20 fix: getPaasman is async, uses dynamic import() instead of require()
 async function getPaasman(): Promise<Paasman> {
 	const configPath = join(homedir(), '.paasman', 'config.yaml')
 	const config = loadConfig(configPath)
@@ -33,7 +33,6 @@ async function getPaasman(): Promise<Paasman> {
 		throw new Error(`Profile '${profileName}' not found`)
 	}
 
-	// Dynamic ESM import — provider loaded at runtime, NOT a build-time dependency
 	const providerModule = await import(`@paasman/provider-${profile.provider}`)
 	const ProviderClass =
 		providerModule.default ?? providerModule[`${profile.provider.charAt(0).toUpperCase()}${profile.provider.slice(1)}Provider`] ?? Object.values(providerModule)[0]
@@ -52,7 +51,6 @@ async function getPaasman(): Promise<Paasman> {
 	return new Paasman({ provider })
 }
 
-// All command factories accept () => Promise<Paasman>
 program.addCommand(appsCommand(getPaasman))
 program.addCommand(envCommand(getPaasman))
 program.addCommand(serversCommand(getPaasman))
@@ -61,6 +59,7 @@ program.addCommand(dbCommand(getPaasman))
 program.addCommand(profileCommand())
 program.addCommand(initCommand())
 program.addCommand(statusCommand())
+program.addCommand(migrateCommand())
 program.addCommand(syncCommand(async (profileOverride?: string) => {
 	const configPath = join(homedir(), '.paasman', 'config.yaml')
 	const config = loadConfig(configPath)
